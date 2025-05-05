@@ -1,9 +1,9 @@
+import { createLogger } from "@mastra/core/logger";
+import { Mastra } from "@mastra/core/mastra";
+import { LibSQLStore } from "@mastra/libsql";
 
-import { Mastra } from '@mastra/core/mastra';
-import { createLogger } from '@mastra/core/logger';
-import { LibSQLStore } from '@mastra/libsql';
-import { weatherWorkflow } from './workflows';
-import { weatherAgent } from './agents';
+import { weatherAgent } from "./agents";
+import { weatherWorkflow } from "./workflows";
 
 export const mastra = new Mastra({
   workflows: { weatherWorkflow },
@@ -13,7 +13,7 @@ export const mastra = new Mastra({
     url: ":memory:",
   }),
   logger: createLogger({
-    name: 'Mastra',
-    level: 'info',
+    name: "Mastra",
+    level: "info",
   }),
 });
