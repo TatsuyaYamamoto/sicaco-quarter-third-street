@@ -102,14 +102,31 @@ const fetchWeather = new Step({
       };
     };
 
-    const forecast = data.daily.time.map((date: string, index: number) => ({
-      date,
-      maxTemp: data.daily.temperature_2m_max[index],
-      minTemp: data.daily.temperature_2m_min[index],
-      precipitationChance: data.daily.precipitation_probability_mean[index],
-      condition: getWeatherCondition(data.daily.weathercode[index]!),
-      location: name,
-    }));
+    const forecast = data.daily.time.flatMap((date: string, index: number) => {
+      const maxTemp = data.daily.temperature_2m_max[index];
+      const minTemp = data.daily.temperature_2m_min[index];
+      const precipitationChance =
+        data.daily.precipitation_probability_mean[index];
+      const weatherCode = data.daily.weathercode[index];
+
+      if (
+        maxTemp === undefined ||
+        minTemp === undefined ||
+        precipitationChance === undefined ||
+        weatherCode === undefined
+      ) {
+        return [];
+      }
+
+      return {
+        date,
+        maxTemp,
+        minTemp,
+        precipitationChance,
+        condition: getWeatherCondition(weatherCode),
+        location: name,
+      };
+    });
 
     return forecast;
   },
@@ -118,7 +135,7 @@ const fetchWeather = new Step({
 const planActivities = new Step({
   id: "plan-activities",
   description: "Suggests activities based on weather conditions",
-  execute: async ({ context, mastra }) => {
+  execute: async ({ context }) => {
     const forecast = context?.getStepResult(fetchWeather);
 
     if (!forecast || forecast.length === 0) {
