@@ -6,8 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "mastra dev",
-    "build": "                               mastra build",
-    "build-cloudflare": "DEPLOYER=CLOUDFLARE mastra build",
+    "build": "mastra build",
+    "postbuild": "node ./scripts/postbuild.js",
+    "deploy-preview": "cd .mastra/output && wrangler deploy",
     "typecheck": "tsc --noEmit",
     "lint:prettier": "prettier --check ."
   },
