@@ -7,7 +7,10 @@ type MiddlewareOption = NonNullable<
 >;
 type Middleware = Extract<MiddlewareOption, { path: string }>;
 
-export const auth: Middleware = {
+/**
+ * Check authorization header, when `/api/*` is called
+ */
+export const authMiddleware: Middleware = {
   path: "/api/*",
   handler: async (c, next): Promise<Response | void> => {
     const authorizationHeader = c.req.header("Authorization");

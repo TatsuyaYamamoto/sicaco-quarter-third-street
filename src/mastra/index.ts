@@ -4,7 +4,7 @@ import { CloudflareDeployer } from "@mastra/deployer-cloudflare";
 
 import { fairy } from "./agents/fairy";
 import { weatherAgent } from "./agents/weatherAgent";
-import { auth } from "./server/middlewares/auth";
+import { authMiddleware } from "./server/middlewares/auth";
 import { weatherWorkflow } from "./workflows";
 
 export const mastra = new Mastra({
@@ -19,7 +19,7 @@ export const mastra = new Mastra({
     level: "info",
   }),
   server: {
-    middleware: [auth],
+    middleware: [authMiddleware],
   },
   deployer: new CloudflareDeployer({
     scope: "***",
