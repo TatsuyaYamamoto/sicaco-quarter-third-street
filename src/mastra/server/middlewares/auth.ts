@@ -1,5 +1,7 @@
 import { Config } from "@mastra/core";
 
+import { TOKEN } from "../../env";
+
 type MiddlewareOption = NonNullable<
   NonNullable<Config["server"]>["middleware"]
 >;
@@ -11,7 +13,7 @@ export const auth: Middleware = {
     const authorizationHeader = c.req.header("Authorization");
     const [prefix, token] = authorizationHeader?.split(" ") ?? [];
 
-    if (prefix === "Bearer" && token && token === process.env["TOKEN"]) {
+    if (prefix === "Bearer" && token && token === TOKEN) {
       await next();
       return;
     }
