@@ -8,8 +8,8 @@
     "dev": "mastra dev",
     "build": "mastra build",
     "postbuild": "node ./scripts/postbuild.js",
-    "deploy": "    cd .mastra/output && wrangler deploy",
-    "deploy-dev": "cd .mastra/output && wrangler deploy --env dev",
+    "deploy": "        cd .mastra/output && wrangler deploy",
+    "deploy-preview": "cd .mastra/output && wrangler versions upload --tag $(git rev-parse --short HEAD)",
     "typecheck": "tsc --noEmit",
     "lint:prettier": "prettier --check ."
   },
