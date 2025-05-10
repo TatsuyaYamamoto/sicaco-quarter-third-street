@@ -1,6 +1,6 @@
 import { Config } from "@mastra/core";
 
-import { TOKEN } from "../../env";
+import { TOKEN, isDev } from "../../env";
 
 type MiddlewareOption = NonNullable<
   NonNullable<Config["server"]>["middleware"]
@@ -13,6 +13,11 @@ type Middleware = Extract<MiddlewareOption, { path: string }>;
 export const authMiddleware: Middleware = {
   path: "/api/*",
   handler: async (c, next): Promise<Response | void> => {
+    if (isDev) {
+      await next();
+      return;
+    }
+
     const authorizationHeader = c.req.header("Authorization");
     const [prefix, token] = authorizationHeader?.split(" ") ?? [];
 
