@@ -1,11 +1,5 @@
-import { Config } from "@mastra/core";
-
 import { TOKEN, isDev } from "../../env";
-
-type MiddlewareOption = NonNullable<
-  NonNullable<Config["server"]>["middleware"]
->;
-type Middleware = Extract<MiddlewareOption, { path: string }>;
+import { Middleware } from "../../types";
 
 /**
  * Check authorization header, when `/api/*` is called
