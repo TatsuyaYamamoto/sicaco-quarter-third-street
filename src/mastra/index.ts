@@ -4,6 +4,7 @@ import { CloudflareDeployer } from "@mastra/deployer-cloudflare";
 
 import { fairy } from "./agents/fairy";
 import { weatherAgent } from "./agents/weatherAgent";
+import apiLineMessagesWebhook from "./server/api/agents.fairy.line.webhook";
 import { authMiddleware } from "./server/middlewares/auth";
 import { weatherWorkflow } from "./workflows";
 
@@ -19,6 +20,7 @@ export const mastra = new Mastra({
     level: "info",
   }),
   server: {
+    apiRoutes: [apiLineMessagesWebhook],
     middleware: [authMiddleware],
   },
   deployer: new CloudflareDeployer({
