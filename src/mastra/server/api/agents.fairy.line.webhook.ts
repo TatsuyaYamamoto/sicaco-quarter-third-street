@@ -31,6 +31,13 @@ export default registerApiRoute("/agents/fairy/line/webhook", {
       return new Response("OK");
     }
 
+    /**
+     * LINE Messaging API webhook should be processed asynchronously.
+     * @see https://developers.line.biz/en/docs/messaging-api/receiving-messages/#page-title
+     *
+     * Return a response to Webhook and continue a process, generate and reply, with `event.waitUntil()`.
+     * @see https://developers.cloudflare.com/workers/platform/limits/#duration
+     */
     c.executionCtx.waitUntil(
       (async () => {
         const generated = await fairy.generate(inputTexts);
