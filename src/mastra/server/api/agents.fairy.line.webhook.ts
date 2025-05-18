@@ -1,66 +1,64 @@
-import { type WebhookRequestBody, messagingApi } from "@line/bot-sdk";
+import { messagingApi, type WebhookRequestBody } from "@line/bot-sdk";
 import { registerApiRoute } from "@mastra/core/server";
 
 import { LINE_MESSAGING_API_CHANNEL_ACCESS_TOKEN } from "../../env";
 import { lineSignatureMiddleware } from "../middlewares/lineSignature";
 
-const client = new messagingApi.MessagingApiClient({
+const lineClient = new messagingApi.MessagingApiClient({
   channelAccessToken: LINE_MESSAGING_API_CHANNEL_ACCESS_TOKEN as string,
 });
+
+const LINE_SENDER_NAME = "Fairy";
 
 export default registerApiRoute("/agents/fairy/line/webhook", {
   method: "POST",
   middleware: [lineSignatureMiddleware],
   handler: async (c) => {
     const fairy = c.get("mastra").getAgent("fairy");
-    const webhookBody = await c.req.json<WebhookRequestBody>();
+    const json = await c.req.json<WebhookRequestBody>();
 
-    let replyToken;
-    const inputs: string[] = [];
+    let replyToken: string | null = null;
+    const inputTexts: string[] = [];
 
-    for (const event of webhookBody.events) {
+    for (const event of json.events) {
       if (event.type === "message" && event.message.type === "text") {
         replyToken = event.replyToken;
-        return JSON.stringify({
-          source: "LINE",
-          text: event.message.text,
-          timestamp: event.timestamp,
-        });
+        inputTexts.push(event.message.text);
       }
     }
 
-    if (!replyToken) {
+    if (inputTexts.length === 0 || !replyToken) {
       return new Response("OK");
     }
 
-    const generated = await fairy.generate(inputs, {});
+    c.executionCtx.waitUntil(
+      (async () => {
+        const generated = await fairy.generate(inputTexts);
 
-    const replyTexts = generated.response.messages.flatMap((message) => {
-      if (message.role !== "assistant") {
-        return [];
-      }
+        const replyTexts = generated.response.messages.flatMap((message) => {
+          if (message.role !== "assistant") {
+            return [];
+          }
 
-      if (typeof message.content === "string") {
-        return message.content;
-      }
+          if (typeof message.content === "string") {
+            return message.content;
+          }
 
-      return message.content.flatMap((part) => {
-        return part.type === "text" ? part.text : [];
-      });
-    });
+          return message.content.flatMap((part) => {
+            return part.type === "text" ? part.text : [];
+          });
+        });
 
-    for (const text of replyTexts) {
-      await client.replyMessage({
-        replyToken,
-        messages: [
-          {
-            sender: { name: "Fairy" },
+        await lineClient.replyMessage({
+          replyToken,
+          messages: replyTexts.map((text) => ({
+            sender: { name: LINE_SENDER_NAME },
             type: "text",
             text,
-          },
-        ],
-      });
-    }
+          })),
+        });
+      })(),
+    );
 
     return new Response("OK");
   },
