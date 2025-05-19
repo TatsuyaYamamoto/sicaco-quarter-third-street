@@ -1,4 +1,8 @@
-import { messagingApi, type WebhookRequestBody } from "@line/bot-sdk";
+import {
+  messagingApi,
+  type Sender,
+  type WebhookRequestBody,
+} from "@line/bot-sdk";
 import { registerApiRoute } from "@mastra/core/server";
 
 import { LINE_MESSAGING_API_CHANNEL_ACCESS_TOKEN } from "../../env";
@@ -8,7 +12,10 @@ const lineClient = new messagingApi.MessagingApiClient({
   channelAccessToken: LINE_MESSAGING_API_CHANNEL_ACCESS_TOKEN,
 });
 
-const LINE_SENDER_NAME = "Fairy";
+const REPLY_SENDER = {
+  name: "Fairy",
+  iconUrl: "https://sicaco-3rd.t28.workers.dev/openmoji-org-1F9FF.png",
+} as const satisfies Sender;
 
 export default registerApiRoute("/agents/fairy/line/webhook", {
   method: "POST",
@@ -59,7 +66,7 @@ export default registerApiRoute("/agents/fairy/line/webhook", {
         await lineClient.replyMessage({
           replyToken,
           messages: replyTexts.map((text) => ({
-            sender: { name: LINE_SENDER_NAME },
+            sender: REPLY_SENDER,
             type: "text",
             text,
           })),

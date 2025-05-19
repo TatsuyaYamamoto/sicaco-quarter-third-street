@@ -39,3 +39,15 @@ const mastraIndexMjsContentReplaced = mastraIndexMjsContent
     ]);`,
   );
 fs.writeFileSync(mastraIndexMjsPath, mastraIndexMjsContentReplaced);
+
+/**
+ * wrangler.json の編集
+ */
+const wranglerJsonPath = path.resolve(mastraOutputDir, "wrangler.json");
+const wranglerJson = JSON.parse(fs.readFileSync(wranglerJsonPath, "utf-8"));
+Object.assign(wranglerJson, {
+  assets: {
+    directory: "./assets/",
+  },
+});
+fs.writeFileSync(wranglerJsonPath, JSON.stringify(wranglerJson, null, 2));
