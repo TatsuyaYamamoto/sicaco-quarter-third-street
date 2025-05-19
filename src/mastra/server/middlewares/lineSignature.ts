@@ -11,8 +11,7 @@ export const lineSignatureMiddleware: MiddlewareHandler = async (
   const body = await c.req.text();
 
   if (
-    LINE_CHANNEL_SECRET &&
-    xLineSignature &&
+    !xLineSignature ||
     !validateSignature(body, LINE_CHANNEL_SECRET, xLineSignature)
   ) {
     return c.json({ message: "Unauthorized" }, { status: 401 });
