@@ -5,7 +5,7 @@ import { LINE_MESSAGING_API_CHANNEL_ACCESS_TOKEN } from "../../env";
 import { lineSignatureMiddleware } from "../middlewares/lineSignature";
 
 const lineClient = new messagingApi.MessagingApiClient({
-  channelAccessToken: LINE_MESSAGING_API_CHANNEL_ACCESS_TOKEN as string,
+  channelAccessToken: LINE_MESSAGING_API_CHANNEL_ACCESS_TOKEN,
 });
 
 const LINE_SENDER_NAME = "Fairy";
