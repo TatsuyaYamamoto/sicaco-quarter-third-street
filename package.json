@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "mastra dev",
+    "dev": "dotenv -- mastra dev",
     "build": "mastra build",
     "postbuild": "node ./scripts/postbuild.js",
     "deploy": "        cd .mastra/output && wrangler deploy",
@@ -25,6 +25,7 @@
     "@mastra/deployer-cloudflare": "0.1.20",
     "@mastra/libsql": "0.0.1",
     "@mastra/memory": "0.3.1",
+    "dotenv-cli": "8.0.0",
     "zod": "3.24.4"
   },
   "devDependencies": {
