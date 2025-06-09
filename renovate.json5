@@ -1,0 +1,11 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: [
+    // General recommendations (https://docs.renovatebot.com/upgrade-best-practices/#general-recommendations)
+    // > Use the config:best-practices preset instead of config:recommended
+    "config:best-practices",
+
+    // `config:js-app` includes it (https://docs.renovatebot.com/presets-config/)
+    ":pinAllExceptPeerDependencies",
+  ],
+}
