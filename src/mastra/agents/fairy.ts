@@ -11,7 +11,6 @@ export const fairy = new Agent({
   instructions: systemPrompt,
   model: openai("gpt-4o"),
   tools: { weatherTool },
-  // @ts-expect-error --- `create-mastra`'s code is already not type-safe. Perhaps, `@mastra/core` and `@mastra/memory` is not compatible.
   memory: new Memory({
     options: {
       lastMessages: 10,
