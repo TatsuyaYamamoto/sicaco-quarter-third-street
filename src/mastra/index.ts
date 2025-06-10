@@ -1,7 +1,7 @@
 import { Mastra } from "@mastra/core";
-import { createLogger } from "@mastra/core/logger";
+import { ConsoleLogger } from "@mastra/core/logger";
 import { CloudflareDeployer } from "@mastra/deployer-cloudflare";
-// import { LibSQLStore } from "@mastra/libsql";
+import { LibSQLStore } from "@mastra/libsql";
 
 import { fairy } from "./agents/fairy";
 import { weatherAgent } from "./agents/weatherAgent";
@@ -12,11 +12,11 @@ import { weatherWorkflow } from "./workflows";
 export const mastra = new Mastra({
   workflows: { weatherWorkflow },
   agents: { fairy, weatherAgent },
-  // storage: new LibSQLStore({
-  //   // stores telemetry, evals, ... into memory storage, if it needs to persist, change to file:../mastra.db
-  //   url: ":memory:",
-  // }),
-  logger: createLogger({
+  storage: new LibSQLStore({
+    // stores telemetry, evals, ... into memory storage, if it needs to persist, change to file:../mastra.db
+    url: ":memory:",
+  }),
+  logger: new ConsoleLogger({
     name: "Mastra",
     level: "info",
   }),
