@@ -1,5 +1,5 @@
 import { Mastra } from "@mastra/core";
-import { createLogger } from "@mastra/core/logger";
+import { ConsoleLogger } from "@mastra/core/logger";
 import { CloudflareDeployer } from "@mastra/deployer-cloudflare";
 // import { LibSQLStore } from "@mastra/libsql";
 
@@ -16,7 +16,7 @@ export const mastra = new Mastra({
   //   // stores telemetry, evals, ... into memory storage, if it needs to persist, change to file:../mastra.db
   //   url: ":memory:",
   // }),
-  logger: createLogger({
+  logger: new ConsoleLogger({
     name: "Mastra",
     level: "info",
   }),
