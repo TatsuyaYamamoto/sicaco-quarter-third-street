@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "dotenv -- mastra dev",
+    "dev-wrangler": "cd .mastra/output && wrangler dev",
     "build": "mastra build",
     "postbuild": "node ./scripts/postbuild.js",
     "deploy": "        cd .mastra/output && wrangler deploy",
