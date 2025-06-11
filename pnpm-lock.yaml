@@ -24,8 +24,8 @@ importers:
         specifier: 0.10.1
         version: 0.10.1(@mastra/core@0.10.3(openapi-types@12.1.3)(react@19.1.0)(zod@3.24.4))
       '@mastra/memory':
-        specifier: 0.10.2
-        version: 0.10.2(@mastra/core@0.10.3(openapi-types@12.1.3)(react@19.1.0)(zod@3.24.4))(react@19.1.0)
+        specifier: 0.10.3
+        version: 0.10.3(@mastra/core@0.10.3(openapi-types@12.1.3)(react@19.1.0)(zod@3.24.4))(react@19.1.0)
       dotenv-cli:
         specifier: 8.0.0
         version: 8.0.0
@@ -758,10 +758,10 @@ packages:
       '@mastra/core': ^0.10.2-alpha.0
       zod: ^3.0.0
 
-  '@mastra/memory@0.10.2':
-    resolution: {integrity: sha512-7g8F+Q1aBPz4wq5YW6krWlee8wvJAnOmnes5toaiaSZo+yqkmqYuwmliBu2LXSXdnFBeDYscQRLkrg6E7yEI9w==}
+  '@mastra/memory@0.10.3':
+    resolution: {integrity: sha512-GEAF5mgajff2HPqvjkX8ZFZ98axU5zXhH2NuX2R8odjv21m6viuEAGIAZxQNqK5kspeqCefYdLfrCoq7arOMzA==}
     peerDependencies:
-      '@mastra/core': ^0.10.2-alpha.0
+      '@mastra/core': '>=0.10.4-0 <0.11.0'
 
   '@mastra/server@0.10.3':
     resolution: {integrity: sha512-63pF9OgUeZfoRkjJlSzkecinnXld85v8LgoNO1aeCvZt8BdZUtkk4Hd3+FclMNs01pI+Tr/sqiRNnJZsMMiwAQ==}
@@ -3534,6 +3534,9 @@ packages:
   zod@3.24.4:
     resolution: {integrity: sha512-OdqJE9UDRPwWsrHjLN2F8bPxvwJBK22EHLWtanu0LSYr5YqzsaaW3RMgmjwr8Rypg5k+meEJdSPXJZXE/yqOMg==}
 
+  zod@3.25.58:
+    resolution: {integrity: sha512-DVLmMQzSZwNYzQoMaM3MQWnxr2eq+AtM9Hx3w1/Yl0pH8sLTSjN4jGP7w6f7uand6Hw44tsnSu1hz1AOA6qI2Q==}
+
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
@@ -3551,6 +3554,13 @@ snapshots:
       nanoid: 3.3.11
       secure-json-parse: 2.7.0
       zod: 3.24.4
+
+  '@ai-sdk/provider-utils@2.2.7(zod@3.25.58)':
+    dependencies:
+      '@ai-sdk/provider': 1.1.3
+      nanoid: 3.3.11
+      secure-json-parse: 2.7.0
+      zod: 3.25.58
 
   '@ai-sdk/provider-utils@2.2.8(zod@3.24.4)':
     dependencies:
@@ -3573,12 +3583,29 @@ snapshots:
     optionalDependencies:
       zod: 3.24.4
 
+  '@ai-sdk/react@1.2.11(react@19.1.0)(zod@3.25.58)':
+    dependencies:
+      '@ai-sdk/provider-utils': 2.2.7(zod@3.25.58)
+      '@ai-sdk/ui-utils': 1.2.10(zod@3.25.58)
+      react: 19.1.0
+      swr: 2.3.3(react@19.1.0)
+      throttleit: 2.1.0
+    optionalDependencies:
+      zod: 3.25.58
+
   '@ai-sdk/ui-utils@1.2.10(zod@3.24.4)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
       '@ai-sdk/provider-utils': 2.2.7(zod@3.24.4)
       zod: 3.24.4
       zod-to-json-schema: 3.24.5(zod@3.24.4)
+
+  '@ai-sdk/ui-utils@1.2.10(zod@3.25.58)':
+    dependencies:
+      '@ai-sdk/provider': 1.1.3
+      '@ai-sdk/provider-utils': 2.2.7(zod@3.25.58)
+      zod: 3.25.58
+      zod-to-json-schema: 3.24.5(zod@3.25.58)
 
   '@ai-sdk/ui-utils@1.2.11(zod@3.24.4)':
     dependencies:
@@ -4580,18 +4607,18 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@mastra/memory@0.10.2(@mastra/core@0.10.3(openapi-types@12.1.3)(react@19.1.0)(zod@3.24.4))(react@19.1.0)':
+  '@mastra/memory@0.10.3(@mastra/core@0.10.3(openapi-types@12.1.3)(react@19.1.0)(zod@3.24.4))(react@19.1.0)':
     dependencies:
       '@mastra/core': 0.10.3(openapi-types@12.1.3)(react@19.1.0)(zod@3.24.4)
       '@upstash/redis': 1.34.8
-      ai: 4.3.13(react@19.1.0)(zod@3.24.4)
+      ai: 4.3.13(react@19.1.0)(zod@3.25.58)
       js-tiktoken: 1.0.20
       pg: 8.15.6
       pg-pool: 3.9.6(pg@8.15.6)
       postgres: 3.4.5
       redis: 4.7.0
       xxhash-wasm: 1.1.0
-      zod: 3.24.4
+      zod: 3.25.58
     transitivePeerDependencies:
       - pg-native
       - react
@@ -5983,6 +6010,18 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       jsondiffpatch: 0.6.0
       zod: 3.24.4
+    optionalDependencies:
+      react: 19.1.0
+
+  ai@4.3.13(react@19.1.0)(zod@3.25.58):
+    dependencies:
+      '@ai-sdk/provider': 1.1.3
+      '@ai-sdk/provider-utils': 2.2.7(zod@3.25.58)
+      '@ai-sdk/react': 1.2.11(react@19.1.0)(zod@3.25.58)
+      '@ai-sdk/ui-utils': 1.2.10(zod@3.25.58)
+      '@opentelemetry/api': 1.9.0
+      jsondiffpatch: 0.6.0
+      zod: 3.25.58
     optionalDependencies:
       react: 19.1.0
 
@@ -7710,8 +7749,14 @@ snapshots:
     dependencies:
       zod: 3.24.4
 
+  zod-to-json-schema@3.24.5(zod@3.25.58):
+    dependencies:
+      zod: 3.25.58
+
   zod@3.22.3: {}
 
   zod@3.24.4: {}
+
+  zod@3.25.58: {}
 
   zwitch@2.0.4: {}
