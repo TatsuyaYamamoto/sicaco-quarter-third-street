@@ -1,3 +1,6 @@
+// @ts-ignore
+import { env } from "cloudflare:workers";
+
 import { D1Store } from "@mastra/cloudflare-d1";
 import { Mastra } from "@mastra/core";
 import { ConsoleLogger } from "@mastra/core/logger";
