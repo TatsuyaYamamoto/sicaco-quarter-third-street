@@ -1,3 +1,6 @@
+// @ts-ignore
+import { env } from "cloudflare:workers";
+
 import { D1Store } from "@mastra/cloudflare-d1";
 import { Mastra } from "@mastra/core";
 import { ConsoleLogger } from "@mastra/core/logger";
@@ -9,6 +12,10 @@ import { DEV } from "./env";
 import apiLineMessagesWebhook from "./server/api/agents.fairy.line.webhook";
 import { authMiddleware } from "./server/middlewares/auth";
 import { weatherWorkflow } from "./workflows";
+
+console.log("=====================");
+console.log(env);
+console.log("=====================");
 
 const storage = new D1Store({
   // @ts-ignore
