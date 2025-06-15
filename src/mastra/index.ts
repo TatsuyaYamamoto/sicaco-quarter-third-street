@@ -20,7 +20,7 @@ console.log("=====================");
 
 const storage = new D1Store({
   // @ts-ignore
-  binding: env.DB,
+  binding: env.MastraStorage,
   tablePrefix: DEV ? "dev_" : "",
 });
 
@@ -48,7 +48,7 @@ export const mastra = new Mastra({
     },
     d1Databases: [
       {
-        binding: "DB",
+        binding: "MastraStorage",
         database_name: "sicaco-3rd",
         database_id: "8042c429-bfb4-4d97-b0c6-5de7b178f118",
       },
