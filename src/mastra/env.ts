@@ -8,8 +8,8 @@ const envVariables = z.object({
   TOKEN: z.string(),
   LINE_CHANNEL_SECRET: z.string(),
   LINE_MESSAGING_API_CHANNEL_ACCESS_TOKEN: z.string(),
-  CLOUDFLARE_ACCOUNT_ID: z.string(),
-  CLOUDFLARE_API_TOKEN: z.string(),
+  CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
+  CLOUDFLARE_API_TOKEN: z.string().optional(),
 });
 
 export const {

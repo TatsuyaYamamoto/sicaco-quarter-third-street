@@ -15,7 +15,9 @@ export const mastra = new Mastra({
   agents: { fairy, weatherAgent },
   storage: new D1Store({
     // @ts-expect-error
-    ...(typeof env === "undefined"
+    ...(typeof env === "undefined" &&
+    CLOUDFLARE_ACCOUNT_ID &&
+    CLOUDFLARE_API_TOKEN
       ? // for local development
         {
           accountId: CLOUDFLARE_ACCOUNT_ID,
