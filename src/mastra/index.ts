@@ -16,12 +16,14 @@ export const mastra = new Mastra({
   storage: new D1Store({
     // @ts-expect-error
     ...(typeof env === "undefined"
-      ? {
+      ? // for local development
+        {
           accountId: CLOUDFLARE_ACCOUNT_ID,
           apiToken: CLOUDFLARE_API_TOKEN,
           databaseId: "8042c429-bfb4-4d97-b0c6-5de7b178f118",
         }
-      : {
+      : // for workers, binding is available
+        {
           // @ts-expect-error
           binding: env.MastraStorage,
         }),
