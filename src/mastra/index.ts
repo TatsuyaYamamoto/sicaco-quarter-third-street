@@ -1,21 +1,25 @@
+import { D1Store } from "@mastra/cloudflare-d1";
 import { Mastra } from "@mastra/core";
 import { ConsoleLogger } from "@mastra/core/logger";
 import { CloudflareDeployer } from "@mastra/deployer-cloudflare";
-import { LibSQLStore } from "@mastra/libsql";
 
 import { fairy } from "./agents/fairy";
 import { weatherAgent } from "./agents/weatherAgent";
+import { DEV } from "./env";
 import apiLineMessagesWebhook from "./server/api/agents.fairy.line.webhook";
 import { authMiddleware } from "./server/middlewares/auth";
 import { weatherWorkflow } from "./workflows";
 
+const storage = new D1Store({
+  // @ts-ignore
+  binding: env.DB,
+  tablePrefix: DEV ? "dev_" : "",
+});
+
 export const mastra = new Mastra({
   workflows: { weatherWorkflow },
   agents: { fairy, weatherAgent },
-  storage: new LibSQLStore({
-    // stores telemetry, evals, ... into memory storage, if it needs to persist, change to file:../mastra.db
-    url: ":memory:",
-  }),
+  storage,
   logger: new ConsoleLogger({
     name: "Mastra",
     level: "info",
@@ -30,5 +34,12 @@ export const mastra = new Mastra({
     auth: {
       apiToken: "***",
     },
+    d1Databases: [
+      {
+        binding: "DB",
+        database_name: "sicaco-3rd",
+        database_id: "8042c429-bfb4-4d97-b0c6-5de7b178f118",
+      },
+    ],
   }),
 });
