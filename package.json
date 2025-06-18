@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "dotenv -- mastra dev",
-    "dev-wrangler": "cd .mastra/output && wrangler dev",
+    "dev": "dotenv -e .dev.vars -- mastra dev",
+    "dev-wrangler": "pnpm run build && cp .dev.vars .mastra/output && wrangler dev --remote --config .mastra/output/wrangler.json",
     "build": "mastra build",
     "postbuild": "node ./scripts/postbuild.js",
     "deploy": "        cd .mastra/output && wrangler deploy",

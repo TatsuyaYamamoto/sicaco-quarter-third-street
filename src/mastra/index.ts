@@ -5,7 +5,12 @@ import { CloudflareDeployer } from "@mastra/deployer-cloudflare";
 
 import { fairy } from "./agents/fairy";
 import { weatherAgent } from "./agents/weatherAgent";
-import { CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN, DEV } from "./env";
+import {
+  CLOUDFLARE_ACCOUNT_ID,
+  CLOUDFLARE_API_TOKEN,
+  CLOUDFLARE_D1_DATABASE_ID,
+  DEV,
+} from "./env";
 import apiLineMessagesWebhook from "./server/api/agents.fairy.line.webhook";
 import { authMiddleware } from "./server/middlewares/auth";
 import { weatherWorkflow } from "./workflows";
@@ -15,19 +20,17 @@ export const mastra = new Mastra({
   agents: { fairy, weatherAgent },
   storage: new D1Store({
     // @ts-expect-error
-    ...(typeof env === "undefined" &&
-    CLOUDFLARE_ACCOUNT_ID &&
-    CLOUDFLARE_API_TOKEN
-      ? // for local development
-        {
-          accountId: CLOUDFLARE_ACCOUNT_ID,
-          apiToken: CLOUDFLARE_API_TOKEN,
-          databaseId: "8042c429-bfb4-4d97-b0c6-5de7b178f118",
-        }
-      : // for workers, binding is available
+    ...(typeof env !== "undefined"
+      ? // for workers, binding is available
         {
           // @ts-expect-error
           binding: env.MastraStorage,
+        }
+      : // for local development
+        {
+          accountId: CLOUDFLARE_ACCOUNT_ID,
+          apiToken: CLOUDFLARE_API_TOKEN,
+          databaseId: CLOUDFLARE_D1_DATABASE_ID,
         }),
     tablePrefix: DEV ? "dev_" : "",
   }),
@@ -49,7 +52,7 @@ export const mastra = new Mastra({
       {
         binding: "MastraStorage",
         database_name: "sicaco-3rd",
-        database_id: "8042c429-bfb4-4d97-b0c6-5de7b178f118",
+        database_id: CLOUDFLARE_D1_DATABASE_ID,
       },
     ],
   }),
