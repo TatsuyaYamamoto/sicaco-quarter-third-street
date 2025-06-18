@@ -25,7 +25,7 @@
     "@mastra/core": "0.10.3",
     "@mastra/deployer-cloudflare": "0.10.3",
     "@mastra/libsql": "0.10.1",
-    "@mastra/memory": "0.10.2",
+    "@mastra/memory": "0.10.4",
     "dotenv-cli": "8.0.0",
     "zod": "3.24.4"
   },
