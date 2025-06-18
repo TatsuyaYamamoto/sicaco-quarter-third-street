@@ -46,8 +46,24 @@ fs.writeFileSync(mastraIndexMjsPath, mastraIndexMjsContentReplaced);
 const wranglerJsonPath = path.resolve(mastraOutputDir, "wrangler.json");
 const wranglerJson = JSON.parse(fs.readFileSync(wranglerJsonPath, "utf-8"));
 Object.assign(wranglerJson, {
+  main: "./main.mjs",
   assets: {
     directory: "./assets/",
   },
 });
 fs.writeFileSync(wranglerJsonPath, JSON.stringify(wranglerJson, null, 2));
+
+/**
+ * entry file を作成する
+ */
+fs.writeFileSync(
+  path.resolve(mastraOutputDir, "main.mjs"),
+  `
+export default {
+  fetch: async (request, env, context) => {
+    const { default: entry } = await import("./index.mjs");
+    return entry.fetch(request, env, context);
+  }
+};
+`,
+);

@@ -13,20 +13,14 @@ import apiLineMessagesWebhook from "./server/api/agents.fairy.line.webhook";
 import { authMiddleware } from "./server/middlewares/auth";
 import { weatherWorkflow } from "./workflows";
 
-console.log("=====================");
-console.log(env);
-console.log("=====================");
-
-const storage = new D1Store({
-  // @ts-ignore
-  binding: env.MastraStorage,
-  tablePrefix: DEV ? "dev_" : "",
-});
-
 export const mastra = new Mastra({
   workflows: { weatherWorkflow },
   agents: { fairy, weatherAgent },
-  storage,
+  storage: new D1Store({
+    // @ts-ignore
+    binding: env.MastraStorage,
+    tablePrefix: DEV ? "dev_" : "",
+  }),
   logger: new ConsoleLogger({
     name: "Mastra",
     level: "info",
