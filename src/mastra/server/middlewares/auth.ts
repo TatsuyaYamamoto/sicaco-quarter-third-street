@@ -1,4 +1,4 @@
-import { TOKEN, isDev } from "../../env";
+import { DEV, TOKEN } from "../../env";
 import { Middleware } from "../../types";
 
 /**
@@ -7,7 +7,7 @@ import { Middleware } from "../../types";
 export const authMiddleware: Middleware = {
   path: "/api/*",
   handler: async (c, next): Promise<Response | void> => {
-    if (isDev) {
+    if (DEV) {
       await next();
       return;
     }
