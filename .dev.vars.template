@@ -1,0 +1,15 @@
+#
+# After cloning, rename this file to `.dev.vars` and set values
+#
+
+# https://developers.cloudflare.com/workers/local-development/environment-variables/
+
+APP_ENV=development
+
+OPENAI_API_KEY=***
+TOKEN=***
+
+LINE_CHANNEL_SECRET=***
+LINE_MESSAGING_API_CHANNEL_ACCESS_TOKEN=***
+
+CLOUDFLARE_API_TOKEN=***
