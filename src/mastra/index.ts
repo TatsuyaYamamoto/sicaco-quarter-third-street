@@ -23,7 +23,7 @@ export const mastra = new Mastra({
     ...(typeof env !== "undefined"
       ? // for workers, binding is available
         {
-          // @ts-expect-error
+          // @ts-expect-error --- it's ok because `import { env } from "cloudflare:workers";` is inserted into the bundle file at build time.
           binding: env.MastraStorage,
         }
       : // for local development
