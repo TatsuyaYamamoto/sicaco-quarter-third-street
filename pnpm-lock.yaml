@@ -15,8 +15,8 @@ importers:
         specifier: 9.9.0
         version: 9.9.0
       '@mastra/cloudflare-d1':
-        specifier: 0.10.1
-        version: 0.10.1(@mastra/core@0.10.3(openapi-types@12.1.3)(react@19.1.0)(zod@3.24.4))
+        specifier: 0.11.0
+        version: 0.11.0(@mastra/core@0.10.3(openapi-types@12.1.3)(react@19.1.0)(zod@3.24.4))
       '@mastra/core':
         specifier: 0.10.3
         version: 0.10.3(openapi-types@12.1.3)(react@19.1.0)(zod@3.24.4)
@@ -675,10 +675,10 @@ packages:
     resolution: {integrity: sha512-qC72D4+CDdjGqJvkFMMEAtancHUQ7/d/tAiHf64z8MopFDmcrtbcJuerDtFceuAfQJ2pDSfCKCtbqoGBNnwg0w==}
     engines: {node: '>=8'}
 
-  '@mastra/cloudflare-d1@0.10.1':
-    resolution: {integrity: sha512-U8b3DwbVhNwTFyKJGYFjx/42OZyR/uPwmIv+QXOtGZJoFq1iE7AE1/QAZupmKLFqYuLXvSYiGghMBCJGoompHg==}
+  '@mastra/cloudflare-d1@0.11.0':
+    resolution: {integrity: sha512-DdieQbrxLaX0kyotrYizFbAuVCEHU2v9IiKrUKc/wiCUwMdhrsi13+ep2b1Ns9B2ZlBh3k/AjvBMvME0vxUXWA==}
     peerDependencies:
-      '@mastra/core': ^0.10.2-alpha.0
+      '@mastra/core': '>=0.10.4-0 <0.11.0'
 
   '@mastra/core@0.10.3':
     resolution: {integrity: sha512-F2fFaWP9aBcK/eUWdvncyN9qcG6XnJgY62jfBknwKwWPu9nd/awTh5VGZej/CWU4Pxm28ASeieqjRSdrfry9cA==}
@@ -1897,6 +1897,9 @@ packages:
 
   cloudflare@4.2.0:
     resolution: {integrity: sha512-L9IainZq+7PN3NG/Mg7T9oRm7SB7AskNe6QLD8j7FrJY+2Dn1qpeLqXF8Im04ANnssezf0KAOtSuxNAAyNEgkg==}
+
+  cloudflare@4.4.1:
+    resolution: {integrity: sha512-wrtQ9WMflnfRcmdQZf/XfVVkeucgwzzYeqFDfgbNdADTaexsPwrtt3etzUvPGvVUeEk9kOPfNkl8MSzObxrIsg==}
 
   cluster-key-slot@1.1.2:
     resolution: {integrity: sha512-RMr0FhtfXemyinomL4hrWcYJxmX6deFdCxpJzhDttxgO1+bcCnkk+9drydLVDmAMG7NE6aN/fl4F7ucU/90gAA==}
@@ -4290,10 +4293,10 @@ snapshots:
     dependencies:
       '@lukeed/csprng': 1.1.0
 
-  '@mastra/cloudflare-d1@0.10.1(@mastra/core@0.10.3(openapi-types@12.1.3)(react@19.1.0)(zod@3.24.4))':
+  '@mastra/cloudflare-d1@0.11.0(@mastra/core@0.10.3(openapi-types@12.1.3)(react@19.1.0)(zod@3.24.4))':
     dependencies:
       '@mastra/core': 0.10.3(openapi-types@12.1.3)(react@19.1.0)(zod@3.24.4)
-      cloudflare: 4.2.0
+      cloudflare: 4.4.1
     transitivePeerDependencies:
       - encoding
 
@@ -5931,6 +5934,18 @@ snapshots:
   clone@2.1.2: {}
 
   cloudflare@4.2.0:
+    dependencies:
+      '@types/node': 18.19.96
+      '@types/node-fetch': 2.6.12
+      abort-controller: 3.0.0
+      agentkeepalive: 4.6.0
+      form-data-encoder: 1.7.2
+      formdata-node: 4.4.1
+      node-fetch: 2.7.0
+    transitivePeerDependencies:
+      - encoding
+
+  cloudflare@4.4.1:
     dependencies:
       '@types/node': 18.19.96
       '@types/node-fetch': 2.6.12
