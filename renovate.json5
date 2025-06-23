@@ -8,4 +8,11 @@
     // `config:js-app` includes it (https://docs.renovatebot.com/presets-config/)
     ":pinAllExceptPeerDependencies",
   ],
+  packageRules: [
+    {
+      groupName: "mastra monorepo",
+      matchUpdateTypes: ["digest", "patch", "minor", "major"],
+      matchPackageNames: ["mastra", "@mastra/*"],
+    },
+  ],
 }
