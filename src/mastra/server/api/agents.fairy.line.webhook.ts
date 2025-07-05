@@ -24,19 +24,41 @@ export default registerApiRoute("/agents/fairy/line/webhook", {
     const fairy = c.get("mastra").getAgent("fairy");
     const json = await c.req.json<WebhookRequestBody>();
 
-    let replyToken: string | null = null;
-    const inputTexts: string[] = [];
-
-    for (const event of json.events) {
-      if (event.type === "message" && event.message.type === "text") {
-        replyToken = event.replyToken;
-        inputTexts.push(event.message.text);
+    const inputsForAgent = json.events.flatMap((event) => {
+      // Events other than `MessageEvent` also have `replayToken`,
+      // and there are messages other than text type.
+      // However, currently, what Fairy can do is limited... 🥺
+      if (event.type !== "message" || event.message.type !== "text") {
+        return [];
       }
-    }
 
-    if (inputTexts.length === 0 || !replyToken) {
-      return new Response("OK");
-    }
+      const userId = event.source.userId;
+
+      // "An empty userId" means the uesr has not agreed to Official Account terms, so a response should not be sent.
+      if (!userId) {
+        return [];
+      }
+
+      const groupId =
+        event.source.type === "group" ? event.source.groupId : null;
+      const roomId = event.source.type === "room" ? event.source.roomId : null;
+
+      // In most cases, it's `groupId`, but just to be safe, fallback to `roomId`.
+      // > LINEバージョン10.17.0以降、複数人トークはグループトークに統合されました。
+      // https://developers.line.biz/ja/docs/messaging-api/group-chats/#group-chat-types
+      const thread =
+        groupId !== null
+          ? `line:group:${groupId}`
+          : roomId !== null
+            ? `line:room:${roomId}`
+            : `line:user:${userId}`;
+
+      return {
+        input: event.message.text,
+        thread,
+        replyToken: event.replyToken,
+      };
+    });
 
     /**
      * LINE Messaging API webhook should be processed asynchronously.
@@ -46,31 +68,44 @@ export default registerApiRoute("/agents/fairy/line/webhook", {
      * @see https://developers.cloudflare.com/workers/platform/limits/#duration
      */
     c.executionCtx.waitUntil(
-      (async () => {
-        const generated = await fairy.generate(inputTexts);
+      (() => {
+        const promises = inputsForAgent.map(
+          async ({ input, thread, replyToken }) => {
+            const generated = await fairy.generate(input, {
+              memory: {
+                thread,
+                resource: "fairy",
+              },
+            });
 
-        const replyTexts = generated.response.messages.flatMap((message) => {
-          if (message.role !== "assistant") {
-            return [];
-          }
+            const replyTexts = generated.response.messages.flatMap(
+              (message) => {
+                if (message.role !== "assistant") {
+                  return [];
+                }
 
-          if (typeof message.content === "string") {
-            return message.content;
-          }
+                if (typeof message.content === "string") {
+                  return message.content;
+                }
 
-          return message.content.flatMap((part) => {
-            return part.type === "text" ? part.text : [];
-          });
-        });
+                return message.content.flatMap((part) => {
+                  return part.type === "text" ? part.text : [];
+                });
+              },
+            );
 
-        await lineClient.replyMessage({
-          replyToken,
-          messages: replyTexts.map((text) => ({
-            sender: REPLY_SENDER,
-            type: "text",
-            text,
-          })),
-        });
+            await lineClient.replyMessage({
+              replyToken,
+              messages: replyTexts.map((text) => ({
+                sender: REPLY_SENDER,
+                type: "text",
+                text,
+              })),
+            });
+          },
+        );
+
+        return Promise.all(promises);
       })(),
     );
 
