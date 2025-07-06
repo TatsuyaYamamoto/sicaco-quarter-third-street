@@ -6,4 +6,4 @@ type MiddlewareOption = NonNullable<
 
 export type Middleware = Extract<MiddlewareOption, { path: string }>;
 
-export type MiddlewareHandler = Middleware["handler"]
+export type MiddlewareHandler = Middleware["handler"];
