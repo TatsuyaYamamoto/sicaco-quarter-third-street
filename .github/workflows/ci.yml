@@ -27,4 +27,4 @@ jobs:
 
       - run: pnpm run lint:prettier
 
-      - run: pnpm run build
+      - run: pnpm run -r build
