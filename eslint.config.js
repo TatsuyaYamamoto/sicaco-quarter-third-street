@@ -6,7 +6,10 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config([
-  globalIgnores(["dist"]),
+  globalIgnores([
+    "packages/agent-worker/.mastra",
+    "packages/fairy-app/worker-configuration.d.ts",
+  ]),
   {
     files: ["**/*.{ts,tsx}"],
     extends: [
