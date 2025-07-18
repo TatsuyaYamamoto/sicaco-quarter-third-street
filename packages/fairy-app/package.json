@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "deploy":          "wrangler deploy",
+    "deploy": "         wrangler deploy",
     "deploy-preview": " wrangler versions upload --tag $(git rev-parse --short HEAD)",
     "cf-typegen": "wrangler types"
   },
