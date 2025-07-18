@@ -1,3 +1,5 @@
+.wrangler
+
 # https://developers.cloudflare.com/workers/local-development/environment-variables/
 .dev.vars
 
