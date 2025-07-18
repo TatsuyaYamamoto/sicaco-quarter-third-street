@@ -1,13 +1,4 @@
 {
-  "extends": ["@tsconfig/strictest"],
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "ES2022",
-    "moduleResolution": "bundler",
-    "forceConsistentCasingInFileNames": true,
-
-    "noEmit": true,
-    "outDir": "dist"
-  },
-  "include": ["src/**/*"]
+  "files": [],
+  "references": [{ "path": "./tsconfig.app.json" }]
 }
