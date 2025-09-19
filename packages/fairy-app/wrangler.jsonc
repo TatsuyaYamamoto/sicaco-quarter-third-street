@@ -4,6 +4,8 @@
  */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+  // https://dash.cloudflare.com/f7860848cdb73de501d77e3002a8fb9c/workers/d1/databases/7f412ae5-05e9-488d-9268-7bb06b639eb8
+  "account_id": "f7860848cdb73de501d77e3002a8fb9c",
   "name": "fairy-app",
   "main": "worker/index.ts",
   "compatibility_date": "2025-07-18",
