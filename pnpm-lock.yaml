@@ -30,11 +30,11 @@ importers:
         specifier: 16.3.0
         version: 16.3.0
       prettier:
-        specifier: 3.6.0
-        version: 3.6.0
+        specifier: 3.7.4
+        version: 3.7.4
       prettier-plugin-organize-imports:
         specifier: 4.1.0
-        version: 4.1.0(prettier@3.6.0)(typescript@5.8.3)
+        version: 4.1.0(prettier@3.7.4)(typescript@5.8.3)
       typescript:
         specifier: 5.8.3
         version: 5.8.3
@@ -3520,8 +3520,8 @@ packages:
       vue-tsc:
         optional: true
 
-  prettier@3.6.0:
-    resolution: {integrity: sha512-ujSB9uXHJKzM/2GBuE0hBOUgC77CN3Bnpqa+g80bkv3T3A93wL/xlzDATHhnhkzifz/UE2SNOvmbTz5hSkDlHw==}
+  prettier@3.7.4:
+    resolution: {integrity: sha512-v6UNi1+3hSlVvv8fSaoUbggEM5VErKmmpGA7Pl3HF8V6uKY7rvClBOJlH6yNwQtfTueNkGVpOv/mtWL9L4bgRA==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -7970,7 +7970,7 @@ snapshots:
       open: 10.1.2
       picocolors: 1.1.1
       posthog-node: 4.18.0
-      prettier: 3.6.0
+      prettier: 3.7.4
       prompt: 1.3.0
       shell-quote: 1.8.3
       shiki: 1.29.2
@@ -8291,12 +8291,12 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-organize-imports@4.1.0(prettier@3.6.0)(typescript@5.8.3):
+  prettier-plugin-organize-imports@4.1.0(prettier@3.7.4)(typescript@5.8.3):
     dependencies:
-      prettier: 3.6.0
+      prettier: 3.7.4
       typescript: 5.8.3
 
-  prettier@3.6.0: {}
+  prettier@3.7.4: {}
 
   pretty-ms@9.2.0:
     dependencies:
