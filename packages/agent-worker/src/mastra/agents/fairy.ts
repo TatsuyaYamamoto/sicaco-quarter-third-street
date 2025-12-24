@@ -9,7 +9,7 @@ import systemPrompt from "./fairySystemPrompt.md";
 export const fairy = new Agent({
   name: "Fairy",
   instructions: systemPrompt,
-  model: openai("gpt-4o"),
+  model: openai("gpt-5-mini"),
   tools: { weatherTool },
   memory: new Memory({
     options: {
