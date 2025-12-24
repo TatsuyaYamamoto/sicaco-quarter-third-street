@@ -44,7 +44,7 @@ export const mastra = new Mastra({
   },
   deployer: new CloudflareDeployer({
     scope: "***",
-    projectName: "sicaco-3rd",
+    projectName: "sicaco-3rd--agent-worker",
     auth: {
       apiToken: "***",
     },
