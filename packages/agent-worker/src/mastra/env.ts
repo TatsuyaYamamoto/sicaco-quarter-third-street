@@ -15,10 +15,10 @@ export const LINE_MESSAGING_API_CHANNEL_ACCESS_TOKEN = process.env[
 
 // it's safe to be public
 // https://github.com/cloudflare/cloudflare-docs/issues/474
-export const CLOUDFLARE_ACCOUNT_ID = "5b6598ad8b63248ec5d31e5040050e8b";
+export const CLOUDFLARE_ACCOUNT_ID = "f7860848cdb73de501d77e3002a8fb9c";
 
 export const CLOUDFLARE_API_TOKEN = process.env[
   "CLOUDFLARE_API_TOKEN"
 ] as string;
 
-export const CLOUDFLARE_D1_DATABASE_ID = "8042c429-bfb4-4d97-b0c6-5de7b178f118";
+export const CLOUDFLARE_D1_DATABASE_ID = "9264f711-1f9b-4b99-bb21-c9cc7383acfb";
