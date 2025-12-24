@@ -3,8 +3,8 @@
  * https://developers.cloudflare.com/workers/wrangler/configuration/
  */
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  // https://dash.cloudflare.com/f7860848cdb73de501d77e3002a8fb9c/workers/d1/databases/7f412ae5-05e9-488d-9268-7bb06b639eb8
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  // https://dash.cloudflare.com/f7860848cdb73de501d77e3002a8fb9c/workers/d1/databases/9264f711-1f9b-4b99-bb21-c9cc7383acfb
   "account_id": "f7860848cdb73de501d77e3002a8fb9c",
   "name": "fairy-app",
   "main": "worker/index.ts",
