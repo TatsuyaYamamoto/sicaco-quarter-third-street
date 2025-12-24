@@ -8,7 +8,7 @@
     "build": "mastra build",
     "postbuild": "node ./scripts/postbuild.js",
     "deploy": "        cd .mastra/output && wrangler deploy",
-    "deploy-preview": "cd .mastra/output && wrangler versions upload --tag $(git rev-parse --short HEAD)"
+    "deploy-preview": "cd .mastra/output && wrangler versions upload --tag $(git rev-parse --short HEAD) --preview-alias ${WORKERS_CI_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
   },
   "dependencies": {
     "@ai-sdk/openai": "1.3.24",
