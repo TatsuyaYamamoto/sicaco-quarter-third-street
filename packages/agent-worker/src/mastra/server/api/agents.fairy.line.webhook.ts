@@ -46,16 +46,13 @@ export default registerApiRoute("/agents/fairy/line/webhook", {
       // In most cases, it's `groupId`, but just to be safe, fallback to `roomId`.
       // > LINEバージョン10.17.0以降、複数人トークはグループトークに統合されました。
       // https://developers.line.biz/ja/docs/messaging-api/group-chats/#group-chat-types
-      const thread =
-        groupId !== null
-          ? `line:group:${groupId}`
-          : roomId !== null
-            ? `line:room:${roomId}`
-            : `line:user:${userId}`;
+      const chatId = groupId ?? roomId ?? userId;
+      const thread = `line:${event.source.type}:${chatId}` as const;
 
       return {
         input: event.message.text,
         thread,
+        chatId,
         replyToken: event.replyToken,
       };
     });
@@ -70,7 +67,13 @@ export default registerApiRoute("/agents/fairy/line/webhook", {
     c.executionCtx.waitUntil(
       (() => {
         const promises = inputsForAgent.map(
-          async ({ input, thread, replyToken }) => {
+          async ({ input, thread, chatId, replyToken }) => {
+            if (thread === `line:user:${chatId}`) {
+              void lineClient.showLoadingAnimation({
+                chatId,
+              });
+            }
+
             const generated = await fairy.generate(input, {
               memory: {
                 thread,
