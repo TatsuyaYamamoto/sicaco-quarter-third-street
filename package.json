@@ -1,7 +1,7 @@
 {
   "name": "sicaco-quarter-third-street",
   "private": true,
-  "packageManager": "pnpm@10.12.1",
+  "packageManager": "pnpm@10.26.2",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
