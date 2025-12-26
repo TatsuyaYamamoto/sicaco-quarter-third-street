@@ -6,6 +6,7 @@
     "dev": "dotenv -e .dev.vars -- mastra dev",
     "dev-wrangler": "pnpm run build && cp .dev.vars .mastra/output && wrangler dev --remote --config .mastra/output/wrangler.json",
     "build": "mastra build",
+    "postbuild": "node ./scripts/postbuild.js",
     "deploy": "        wrangler --config .mastra/output/wrangler.json deploy",
     "deploy-preview": "wrangler --config .mastra/output/wrangler.json versions upload --tag $(git rev-parse --short HEAD) --preview-alias ${WORKERS_CI_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
   },
