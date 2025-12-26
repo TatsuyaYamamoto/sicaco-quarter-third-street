@@ -81,7 +81,7 @@ export default registerApiRoute("/agents/fairy/line/webhook", {
               },
             });
 
-            const replyTexts = generated.response.messages.flatMap(
+            const replyTexts = generated.response.messages?.flatMap(
               (message) => {
                 if (message.role !== "assistant") {
                   return [];
@@ -97,14 +97,16 @@ export default registerApiRoute("/agents/fairy/line/webhook", {
               },
             );
 
-            await lineClient.replyMessage({
-              replyToken,
-              messages: replyTexts.map((text) => ({
-                sender: REPLY_SENDER,
-                type: "text",
-                text,
-              })),
-            });
+            if (replyTexts) {
+              await lineClient.replyMessage({
+                replyToken,
+                messages: replyTexts.map((text) => ({
+                  sender: REPLY_SENDER,
+                  type: "text",
+                  text,
+                })),
+              });
+            }
           },
         );
 

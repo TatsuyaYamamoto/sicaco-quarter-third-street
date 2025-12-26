@@ -43,11 +43,7 @@ export const mastra = new Mastra({
     middleware: [authMiddleware],
   },
   deployer: new CloudflareDeployer({
-    scope: "***",
     projectName: "sicaco-3rd--agent-worker",
-    auth: {
-      apiToken: "***",
-    },
     d1Databases: [
       {
         binding: "MastraStorage",
