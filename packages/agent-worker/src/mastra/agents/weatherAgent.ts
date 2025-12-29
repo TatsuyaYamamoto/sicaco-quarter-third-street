@@ -24,9 +24,7 @@ export const weatherAgent = new Agent({
     options: {
       lastMessages: 10,
       semanticRecall: false,
-      threads: {
-        generateTitle: false,
-      },
+      generateTitle: false,
     },
   }),
 });
