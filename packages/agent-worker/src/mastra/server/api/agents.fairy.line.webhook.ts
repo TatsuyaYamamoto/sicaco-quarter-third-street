@@ -81,32 +81,16 @@ export default registerApiRoute("/agents/fairy/line/webhook", {
               },
             });
 
-            const replyTexts = generated.response.messages?.flatMap(
-              (message) => {
-                if (message.role !== "assistant") {
-                  return [];
-                }
-
-                if (typeof message.content === "string") {
-                  return message.content;
-                }
-
-                return message.content.flatMap((part) => {
-                  return part.type === "text" ? part.text : [];
-                });
-              },
-            );
-
-            if (replyTexts) {
-              await lineClient.replyMessage({
-                replyToken,
-                messages: replyTexts.map((text) => ({
+            await lineClient.replyMessage({
+              replyToken,
+              messages: [
+                {
                   sender: REPLY_SENDER,
                   type: "text",
-                  text,
-                })),
-              });
-            }
+                  text: generated.text,
+                },
+              ],
+            });
           },
         );
 
