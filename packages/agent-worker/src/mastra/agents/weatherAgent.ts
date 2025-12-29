@@ -1,10 +1,11 @@
-import { openai } from "@ai-sdk/openai";
 import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 
+import { openai } from "@ai-sdk/openai";
 import { weatherTool } from "../tools/weatherTool";
 
 export const weatherAgent = new Agent({
+  id: "weather-agent",
   name: "Weather Agent",
   instructions: `
       You are a helpful weather assistant that provides accurate weather information.
@@ -24,9 +25,7 @@ export const weatherAgent = new Agent({
     options: {
       lastMessages: 10,
       semanticRecall: false,
-      threads: {
-        generateTitle: false,
-      },
+      generateTitle: false,
     },
   }),
 });

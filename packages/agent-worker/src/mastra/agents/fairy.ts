@@ -7,6 +7,7 @@ import { weatherTool } from "../tools/weatherTool";
 import systemPrompt from "./fairySystemPrompt.md";
 
 export const fairy = new Agent({
+  id: "fairy",
   name: "Fairy",
   instructions: systemPrompt,
   model: openai("gpt-4o"),
@@ -15,9 +16,7 @@ export const fairy = new Agent({
     options: {
       lastMessages: 10,
       semanticRecall: false,
-      threads: {
-        generateTitle: false,
-      },
+      generateTitle: false,
     },
   }),
 });

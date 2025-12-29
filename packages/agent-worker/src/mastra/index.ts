@@ -19,6 +19,7 @@ export const mastra = new Mastra({
   workflows: { weatherWorkflow },
   agents: { fairy, weatherAgent },
   storage: new D1Store({
+    id: "d1-store",
     // @ts-expect-error --- it's ok because `import { env } from "cloudflare:workers";` is inserted into the bundle file at build time.
     ...(typeof env !== "undefined"
       ? // for workers, binding is available
