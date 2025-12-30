@@ -13,6 +13,11 @@ export const LINE_MESSAGING_API_CHANNEL_ACCESS_TOKEN = process.env[
   "LINE_MESSAGING_API_CHANNEL_ACCESS_TOKEN"
 ] as string;
 
+export const SICACO_3RD_SBM_URL = process.env["SICACO_3RD_SBM_URL"] as string;
+export const SICACO_3RD_SBM_TOKEN = process.env[
+  "SICACO_3RD_SBM_TOKEN"
+] as string;
+
 // it's safe to be public
 // https://github.com/cloudflare/cloudflare-docs/issues/474
 export const CLOUDFLARE_ACCOUNT_ID = "f7860848cdb73de501d77e3002a8fb9c";
