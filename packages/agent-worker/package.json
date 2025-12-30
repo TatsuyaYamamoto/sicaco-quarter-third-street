@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "2.0.88",
-    "@line/bot-sdk": "9.9.0",
+    "@line/bot-sdk": "10.5.0",
     "@mastra/cloudflare-d1": "1.0.0-beta.8",
     "@mastra/core": "1.0.0-beta.18",
     "@mastra/deployer-cloudflare": "1.0.0-beta.1",
