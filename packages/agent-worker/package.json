@@ -11,7 +11,7 @@
     "deploy-preview": "wrangler --config .mastra/output/wrangler.json versions upload --tag $(git rev-parse --short HEAD) --preview-alias ${WORKERS_CI_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
   },
   "dependencies": {
-    "@ai-sdk/openai": "2.0.88",
+    "@ai-sdk/openai": "2.0.123",
     "@line/bot-sdk": "9.9.0",
     "@mastra/cloudflare-d1": "1.0.0-beta.8",
     "@mastra/core": "1.0.0-beta.18",
