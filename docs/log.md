@@ -2,6 +2,7 @@
 
 ## 2026-11-23
 
+* **Update**: [全体設計](design.md) の「開発ツールとライブラリ」で、LINE Messaging API の型は `@line/bot-sdk` のものを使うことにした。技術選択のときに決めていた内容を、誤って「ライブラリは使わない」と書いていたため。
 * **Update**: [Phase 1 の詳細設計](phases/phase-1.md) の「LINE 受け口モジュールの処理フロー」と「会話の受け付け判定」を、LINE 受け口の実装に合わせて補った。テキストとスタンプ以外のメッセージは MVP では保存もせずに無視する（画像は Phase 2 で扱うため）。発言者の userId が含まれないイベントは、発言者を識別できないので無視する。署名が正しくないリクエストには 401 を返す。複数人トークは、家族グループ以外のグループと同じく受け付けない。
 * **Update**: [全体設計](design.md) の「開発ツールとライブラリ」に、リポジトリを pnpm workspace の monorepo にし、Worker `fairy` を `packages/fairy` に置くことを追加した。TypeScript と tsconfig はルートで管理し、各パッケージから継承する。今後パッケージが増えたときに、あとから monorepo に移行する手間を避けるため。
 * **Update**: [Phase 1 の詳細設計](phases/phase-1.md) の設定値のキーの名前を、`LINE_USER_ID_MASTER` / `LINE_USER_ID_ASSISTANT2` / `LINE_GROUP_ID_FAMILY` に変えた。何の ID かを先に書き、同じ種類の設定が並ぶようにするため。

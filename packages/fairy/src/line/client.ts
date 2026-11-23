@@ -4,12 +4,10 @@
  * @see https://developers.line.biz/ja/reference/messaging-api/
  */
 
-import { z } from "zod";
+import type { messagingApi } from "@line/bot-sdk";
 import type { IncomingMessage } from "../agent/types";
 
 const API_BASE_URL = "https://api.line.me/v2/bot";
-
-const profileSchema = z.object({ displayName: z.string() });
 
 export type LineClient = ReturnType<typeof createLineClient>;
 
@@ -33,7 +31,10 @@ export const createLineClient = (channelAccessToken: string) => {
     reply: async (replyToken: string, text: string): Promise<void> => {
       await request("/message/reply", {
         method: "POST",
-        body: JSON.stringify({ replyToken, messages: [{ type: "text", text }] }),
+        body: JSON.stringify({
+          replyToken,
+          messages: [{ type: "text", text }],
+        } satisfies messagingApi.ReplyMessageRequest),
       });
     },
 
@@ -47,7 +48,10 @@ export const createLineClient = (channelAccessToken: string) => {
           ? `/group/${conversation.platformConversationId}/member/${userId}`
           : `/profile/${userId}`;
       const res = await request(path);
-      return profileSchema.parse(await res.json());
+      const { displayName } = await res.json<
+        messagingApi.UserProfileResponse | messagingApi.GroupUserProfileResponse
+      >();
+      return { displayName };
     },
   };
 };

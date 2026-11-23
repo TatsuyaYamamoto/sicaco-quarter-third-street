@@ -1,16 +1,17 @@
 /**
- * @file LINE の Webhook の受け口
+ * @file POST /webhook/line: LINE の Webhook の受け口
  *
  * @see docs/phases/phase-1.md の「LINE 受け口モジュールの処理フロー」
  */
 
+import type { webhook } from "@line/bot-sdk";
 import { Hono } from "hono";
-import type { DispatchMessage } from "../agent/types";
-import { loadConfig } from "../config";
-import { isAcceptedConversation } from "./acceptance";
-import { createLineClient, type LineClient } from "./client";
-import { parseMessageEvent, toIncomingMessage, webhookBodySchema } from "./event";
-import { verifySignature } from "./signature";
+import type { DispatchMessage } from "../../agent/types";
+import { loadConfig } from "../../config";
+import { isAcceptedConversation } from "../../line/acceptance";
+import { createLineClient, type LineClient } from "../../line/client";
+import { isLineMessageEvent, toIncomingMessage } from "../../line/event";
+import { verifySignature } from "../../line/signature";
 
 type Dependencies = {
   /** 受け付けたメッセージを Agent に渡す */
@@ -28,13 +29,16 @@ export const createLineWebhook = ({ dispatch, createClient = createLineClient }:
       return c.text("invalid signature", 401);
     }
 
-    const { events } = webhookBodySchema.parse(JSON.parse(body));
+    // 署名を検証したので、LINE から届いた内容として型を信頼する
+    const { events } = JSON.parse(body) as webhook.CallbackRequest;
     const client = createClient(config.LINE_CHANNEL_ACCESS_TOKEN);
 
-    const handleEvent = async (rawEvent: unknown): Promise<void> => {
-      const event = parseMessageEvent(rawEvent);
-      const message = event && toIncomingMessage(event);
-      if (!event || !message || !isAcceptedConversation(message.conversation, config)) {
+    const handleEvent = async (event: webhook.Event): Promise<void> => {
+      if (!isLineMessageEvent(event)) {
+        return;
+      }
+      const message = toIncomingMessage(event);
+      if (!message || !isAcceptedConversation(message.conversation, config)) {
         return;
       }
       const reply = await dispatch(message);

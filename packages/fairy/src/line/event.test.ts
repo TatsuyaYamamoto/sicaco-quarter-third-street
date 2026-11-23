@@ -1,13 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { textEvent } from "../../test/line";
-import { parseMessageEvent, toIncomingMessage } from "./event";
+import type { webhook } from "@line/bot-sdk";
+import { isLineMessageEvent, toIncomingMessage } from "./event";
 
 const toMessage = (event: unknown) => {
-  const parsed = parseMessageEvent(event);
-  return parsed && toIncomingMessage(parsed);
+  // テストではイベントを部分的に書くので、型は検査しない
+  const e = event as webhook.Event;
+  return isLineMessageEvent(e) ? toIncomingMessage(e) : null;
 };
 
-describe("parseMessageEvent / toIncomingMessage", () => {
+describe("isLineMessageEvent / toIncomingMessage", () => {
   it("グループのテキストメッセージを変換する", () => {
     const message = toMessage(textEvent({ type: "group", groupId: "C1", userId: "U1" }));
     expect(message).toMatchObject({

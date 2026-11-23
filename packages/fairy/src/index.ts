@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { createLineWebhook } from "./line/webhook";
+import { createLineWebhook } from "./routes/webhook/line";
 
 const app = new Hono<{ Bindings: Env }>().route(
   "/webhook/line",

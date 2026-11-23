@@ -1,7 +1,7 @@
 import { createExecutionContext, waitOnExecutionContext } from "cloudflare:test";
 import { describe, expect, it, vi } from "vitest";
-import { sign, testEnv, textEvent } from "../../test/line";
-import { createLineWebhook } from "./webhook";
+import { sign, testEnv, textEvent } from "../../../test/line";
+import { createLineWebhook } from "./line";
 
 const setup = (reply: { text: string } | null = { text: "はい" }) => {
   const dispatch = vi.fn(async () => reply);
