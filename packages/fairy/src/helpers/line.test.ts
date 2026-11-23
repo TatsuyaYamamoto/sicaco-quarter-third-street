@@ -48,7 +48,7 @@ describe("isLineMessageEvent / toIncomingMessage", () => {
     expect(message?.conversation).toEqual({ platformConversationId: "U1", type: "dm" });
   });
 
-  it("スタンプはキーワードを本文にする", () => {
+  it("スタンプはキーワードを渡す", () => {
     const event = {
       ...textEvent({ type: "user", userId: "U1" }),
       message: {
@@ -59,15 +59,15 @@ describe("isLineMessageEvent / toIncomingMessage", () => {
         keywords: ["OK", "了解"],
       },
     };
-    expect(toMessage(event)?.message).toMatchObject({ type: "sticker", text: "OK, 了解" });
+    expect(toMessage(event)?.message).toMatchObject({ type: "sticker", keywords: ["OK", "了解"] });
   });
 
-  it("キーワードのないスタンプは本文を null にする", () => {
+  it("キーワードのないスタンプは、キーワードを空にする", () => {
     const event = {
       ...textEvent({ type: "user", userId: "U1" }),
       message: { type: "sticker", id: "1", packageId: "p", stickerId: "s" },
     };
-    expect(toMessage(event)?.message.text).toBeNull();
+    expect(toMessage(event)?.message).toMatchObject({ type: "sticker", keywords: [] });
   });
 
   it.each([

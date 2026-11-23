@@ -11,11 +11,16 @@ interface IncomingMessageBase {
   conversation: {
     type: "group" | "dm";
   };
-  message: {
-    type: "text" | "sticker";
-    /** 本文。スタンプはキーワードを入れる（キーワードがなければ null） */
-    text: string | null;
-  };
+  message:
+    | {
+        type: "text";
+        text: string;
+      }
+    | {
+        type: "sticker";
+        /** スタンプに設定されたキーワード。設定されていなければ空 */
+        keywords: string[];
+      };
   /** 送信日時（ISO 8601） */
   sentAt: string;
 }

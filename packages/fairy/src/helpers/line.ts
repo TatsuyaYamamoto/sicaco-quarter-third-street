@@ -53,14 +53,10 @@ export const toIncomingMessage = (event: LineMessageEvent): IncomingMessage | nu
         : { platformConversationId: source.userId, type: "dm" },
     sender: { platformUserId: source.userId },
     message: {
+      ...(message.type === "text"
+        ? { type: "text", text: message.text }
+        : { type: "sticker", keywords: message.keywords ?? [] }),
       platformMessageId: message.id,
-      type: message.type,
-      text:
-        message.type === "text"
-          ? message.text
-          : message.keywords?.length
-            ? message.keywords.join(", ")
-            : null,
       payloadJson: JSON.stringify(event),
     },
     sentAt: new Date(event.timestamp).toISOString(),
