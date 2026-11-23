@@ -1,7 +1,7 @@
 import { env } from "cloudflare:test";
 import { drizzle } from "drizzle-orm/d1";
 import { describe, expect, it } from "vitest";
-import { accounts, conversations, messages, persons } from "../src/db/schema";
+import { accounts, conversations, messages, persons } from "./schema";
 
 describe("マイグレーション", () => {
   it("各テーブルに書き込んで読み出せる", async () => {
