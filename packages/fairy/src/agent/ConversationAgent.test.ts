@@ -11,8 +11,8 @@ import type { IncomingMessage } from "./types";
 const db = drizzle(env.DB);
 
 /** OpenAI の Responses API のレスポンス。output_text に構造化出力の JSON を入れる */
-const openaiResponse = (output: { should_reply: boolean; reply: string | null }): Response => {
-  return Response.json({
+const openaiResponse = (output: { should_reply: boolean; reply: string | null }): Response =>
+  Response.json({
     id: "resp_1",
     created_at: 0,
     model: "gpt-6-luna",
@@ -26,7 +26,6 @@ const openaiResponse = (output: { should_reply: boolean; reply: string | null })
     ],
     usage: { input_tokens: 1, output_tokens: 1 },
   });
-};
 
 // テストごとにはストレージが分かれないので、ほかのテストと ID が重ならないようにする
 let seq = 0;
@@ -103,17 +102,15 @@ describe("ConversationAgent", () => {
 });
 
 describe("resolveRoles", () => {
-  const account = (personId: string, platformUserId: string): typeof accounts.$inferSelect => {
-    return {
-      id: `a-${personId}`,
-      platform: "line",
-      platformUserId,
-      displayName: null,
-      personId,
-      linkedBy: "auto",
-      createdAt: "",
-    };
-  };
+  const account = (personId: string, platformUserId: string): typeof accounts.$inferSelect => ({
+    id: `a-${personId}`,
+    platform: "line",
+    platformUserId,
+    displayName: null,
+    personId,
+    linkedBy: "auto",
+    createdAt: "",
+  });
 
   it("設定値の LINE userId と一致する Account を持つ Person に役割を付ける", () => {
     const roles = resolveRoles(

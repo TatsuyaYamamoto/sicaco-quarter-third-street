@@ -31,6 +31,4 @@ const configSchema = z.object({ ...secretsSchema.shape, ...varsSchema.shape });
 export type Config = z.output<typeof configSchema>;
 
 /** Worker の env から設定値を読み出す。不足・不正な値があれば例外を投げる */
-export const loadConfig = (env: Env): Config => {
-  return configSchema.parse(env);
-};
+export const loadConfig = (env: Env): Config => configSchema.parse(env);

@@ -4,8 +4,8 @@ import { generateReply } from "./llm";
 
 const config = { OPENAI_REASONING_EFFORT: "none", OPENAI_TIMEOUT_SECONDS: 1 } as const;
 
-const modelReturning = (text: string): MockLanguageModelV4 => {
-  return new MockLanguageModelV4({
+const modelReturning = (text: string): MockLanguageModelV4 =>
+  new MockLanguageModelV4({
     doGenerate: async () => ({
       content: [{ type: "text", text }],
       finishReason: { unified: "stop", raw: undefined },
@@ -16,7 +16,6 @@ const modelReturning = (text: string): MockLanguageModelV4 => {
       warnings: [],
     }),
   });
-};
 
 afterEach(() => {
   vi.restoreAllMocks();
