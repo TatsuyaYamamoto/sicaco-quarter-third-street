@@ -1,9 +1,14 @@
+// strictest の上に、Workers 向けの設定を次の 2 つから取り入れている
+// - Cloudflare の Workers のテンプレート（target / lib / module / moduleResolution / noEmit）
+//   https://github.com/cloudflare/workers-sdk/blob/79d30d4321b057f3cb4451ab43fa67653f1a8ee5/packages/create-cloudflare/templates/hello-world/ts/tsconfig.json
+// - Agents SDK が同梱している tsconfig（verbatimModuleSyntax）
+//   https://github.com/cloudflare/agents/blob/dde826ec78f1714d9156d964d720507e3a139d8e/packages/agents/agents.tsconfig.json
 {
   "extends": "@tsconfig/strictest/tsconfig.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022"],
-    "module": "ESNext",
+    "target": "es2024",
+    "lib": ["es2024"],
+    "module": "es2022",
     "moduleResolution": "bundler",
     "types": ["./worker-configuration.d.ts", "@cloudflare/vitest-plugin/types"],
     "noEmit": true,
