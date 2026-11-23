@@ -7,6 +7,15 @@ settings:
 importers:
 
   .:
+    devDependencies:
+      oxfmt:
+        specifier: 0.79.0
+        version: 0.79.0
+      oxlint:
+        specifier: 1.94.0
+        version: 1.94.0
+
+  packages/fairy:
     dependencies:
       '@ai-sdk/openai':
         specifier: 4.0.122
@@ -39,12 +48,6 @@ importers:
       drizzle-kit:
         specifier: 0.31.11
         version: 0.31.11
-      oxfmt:
-        specifier: 0.79.0
-        version: 0.79.0
-      oxlint:
-        specifier: 1.94.0
-        version: 1.94.0
       typescript:
         specifier: 7.0.2
         version: 7.0.2

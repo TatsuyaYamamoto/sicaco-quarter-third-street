@@ -118,6 +118,7 @@ MVP 自体は OpenAI の SDK だけでも作れるが、機能追加（MCP に�
 
 | 用途 | 使うもの |
 | --- | --- |
+| リポジトリの構成 | pnpm workspace の monorepo。Worker `fairy` は `packages/fairy` に置く |
 | パッケージマネージャー | pnpm（依存のバージョンはすべて固定する） |
 | lint / format | oxc（oxlint / oxfmt） |
 | TypeScript の設定 | `@tsconfig/strictest` を継承する |
