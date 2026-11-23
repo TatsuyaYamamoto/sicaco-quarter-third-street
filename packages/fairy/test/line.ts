@@ -2,24 +2,12 @@
  * @file LINE の Webhook のテストで使うヘルパー
  */
 
-import { env } from "cloudflare:test";
-
-export const testConfig = {
-  LINE_CHANNEL_SECRET: "test-channel-secret",
-  LINE_CHANNEL_ACCESS_TOKEN: "test-access-token",
-  OPENAI_API_KEY: "sk-test",
-  LINE_USER_ID_MASTER: "Umaster",
-  LINE_USER_ID_ASSISTANT2: "Uassistant2",
-  LINE_GROUP_ID_FAMILY: "Cfamily",
-};
-
-/** wrangler.jsonc の vars に、テスト用の secrets を足した env */
-export const testEnv = { ...env, ...testConfig } satisfies Env;
+import { testSecrets } from "./secrets";
 
 /** Webhook の署名を作る */
 export const sign = async (
   body: string,
-  secret = testConfig.LINE_CHANNEL_SECRET,
+  secret: string = testSecrets.LINE_CHANNEL_SECRET,
 ): Promise<string> => {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(

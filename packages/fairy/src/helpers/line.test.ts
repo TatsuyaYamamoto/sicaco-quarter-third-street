@@ -1,6 +1,7 @@
 import type { webhook } from "@line/bot-sdk";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { sign, testConfig, textEvent } from "../../test/line";
+import { sign, textEvent } from "../../test/line";
+import { testSecrets } from "../../test/secrets";
 import {
   createLineClient,
   isAcceptedConversation,
@@ -88,7 +89,7 @@ describe("isAcceptedConversation", () => {
     ["助手二号との DM", "dm", "Uassistant2", true],
     ["それ以外の人との DM", "dm", "Uother", false],
   ] as const)("%s", (_, type, platformConversationId, expected) => {
-    expect(isAcceptedConversation({ type, platformConversationId }, testConfig)).toBe(expected);
+    expect(isAcceptedConversation({ type, platformConversationId }, testSecrets)).toBe(expected);
   });
 });
 

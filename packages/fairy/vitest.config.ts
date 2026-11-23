@@ -1,5 +1,6 @@
 import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-plugin";
 import { defineConfig } from "vitest/config";
+import { testSecrets } from "./test/secrets";
 
 export default defineConfig(async () => {
   const migrations = await readD1Migrations("./migrations");
@@ -8,7 +9,7 @@ export default defineConfig(async () => {
       cloudflareTest({
         wrangler: { configPath: "./wrangler.jsonc" },
         miniflare: {
-          bindings: { TEST_MIGRATIONS: migrations },
+          bindings: { TEST_MIGRATIONS: migrations, ...testSecrets },
         },
       }),
     ],

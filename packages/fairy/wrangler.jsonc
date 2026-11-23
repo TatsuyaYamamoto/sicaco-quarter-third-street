@@ -7,6 +7,12 @@
   "observability": {
     "enabled": true,
   },
+  "durable_objects": {
+    "bindings": [{ "name": "CONVERSATION_AGENT", "class_name": "ConversationAgent" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ConversationAgent"] }],
+  // FAIRY.md をシステムプロンプトとして文字列で取り込む
+  "rules": [{ "type": "Text", "globs": ["**/*.md"], "fallthrough": true }],
   "d1_databases": [
     {
       "binding": "DB",

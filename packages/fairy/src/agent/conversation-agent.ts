@@ -1,0 +1,122 @@
+/**
+ * @file ConversationAgent: 会話（グループや DM）ごとに 1 つ作られ、メッセージへの返信を決める
+ *
+ * @see docs/phases/phase-1.md の「ConversationAgent の処理フロー」
+ */
+
+import { Agent } from "agents";
+import { drizzle } from "drizzle-orm/d1";
+import fairyMd from "../../../../FAIRY.md";
+import { type Config, loadConfig } from "../config";
+import type { accounts } from "../db/schema";
+import {
+  getAccountsByPerson,
+  getRecentMessages,
+  resolveAccount,
+  resolveConversation,
+  saveMessage,
+} from "../db/storage";
+import { createModel, generateReply } from "./llm";
+import { buildConversationPrompt, buildSystemPrompt, type Role } from "./prompt";
+import type { IncomingMessage, Reply } from "./types";
+
+const systemPrompt = buildSystemPrompt(fairyMd);
+
+/**
+ * Person ごとの役割を、紐付く Account と設定値から決める
+ *
+ * @see docs/design.md の「概念モデル」
+ */
+export const resolveRoles = (
+  accountsByPerson: Map<string, (typeof accounts.$inferSelect)[]>,
+  config: Pick<Config, "LINE_USER_ID_MASTER" | "LINE_USER_ID_ASSISTANT2">,
+): Map<string, Role> => {
+  const roles = new Map<string, Role>();
+  for (const [personId, personAccounts] of accountsByPerson) {
+    const lineUserIds = personAccounts
+      .filter((account) => account.platform === "line")
+      .map((account) => account.platformUserId);
+    if (lineUserIds.includes(config.LINE_USER_ID_MASTER)) {
+      roles.set(personId, "master");
+    } else if (lineUserIds.includes(config.LINE_USER_ID_ASSISTANT2)) {
+      roles.set(personId, "assistant2");
+    }
+  }
+  return roles;
+};
+
+export class ConversationAgent extends Agent<Cloudflare.Env> {
+  /** メッセージを受け取り、返信の内容を返す */
+  async handleMessage(message: IncomingMessage): Promise<Reply> {
+    const config = loadConfig(this.env);
+    const db = drizzle(this.env.DB);
+    const now = new Date().toISOString();
+
+    const [account, conversation] = await Promise.all([
+      resolveAccount(
+        db,
+        { platform: message.platform, platformUserId: message.sender.platformUserId },
+        now,
+      ),
+      resolveConversation(
+        db,
+        {
+          platform: message.platform,
+          platformConversationId: message.conversation.platformConversationId,
+          type: message.conversation.type,
+        },
+        now,
+      ),
+    ]);
+
+    const saved = await saveMessage(db, {
+      conversationId: conversation.id,
+      accountId: account.id,
+      type: message.message.type,
+      text:
+        message.message.type === "text"
+          ? message.message.text
+          : message.message.keywords.join(", ") || null,
+      payloadJson: message.message.payloadJson,
+      platformMessageId: message.message.platformMessageId,
+      createdAt: message.sentAt,
+    });
+    if (!saved) {
+      // すでに受け取ったメッセージ（Webhook の再送など）なので、二重に返信しない
+      return { type: "none" };
+    }
+
+    const history = await getRecentMessages(db, conversation.id, config.HISTORY_LIMIT);
+    const personIds = [
+      ...new Set(history.flatMap(({ personId }) => (personId === null ? [] : [personId]))),
+    ];
+    const roles = resolveRoles(await getAccountsByPerson(db, personIds), config);
+
+    const reply = await generateReply({
+      model: createModel(config),
+      system: systemPrompt,
+      prompt: buildConversationPrompt({
+        conversationType: message.conversation.type,
+        history,
+        roles,
+      }),
+      config,
+    });
+
+    if (reply.type === "text") {
+      // 返信の内容を返すのと並行して保存する（docs/phases/phase-1.md の「応答速度と D1 への保存のタイミング」）
+      this.ctx.waitUntil(
+        saveMessage(db, {
+          conversationId: conversation.id,
+          accountId: null,
+          type: "text",
+          text: reply.text,
+          payloadJson: JSON.stringify(reply),
+          platformMessageId: null,
+          createdAt: new Date().toISOString(),
+        }).catch((error: unknown) => console.error("failed to save Fairy's message", error)),
+      );
+    }
+    return reply;
+  }
+}

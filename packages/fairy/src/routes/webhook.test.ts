@@ -1,6 +1,6 @@
-import { createExecutionContext, waitOnExecutionContext } from "cloudflare:test";
+import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { sign, testEnv, textEvent } from "../../test/line";
+import { sign, textEvent } from "../../test/line";
 
 const { dispatch } = vi.hoisted(() => ({ dispatch: vi.fn() }));
 vi.mock("../agent/dispatch", () => ({ dispatchMessage: dispatch }));
@@ -40,7 +40,7 @@ describe("POST /webhook/line", () => {
     const res = await webhookRoutes.request(
       "/line",
       { method: "POST", body, headers: { "x-line-signature": signature ?? (await sign(body)) } },
-      testEnv,
+      env,
       ctx,
     );
     await waitOnExecutionContext(ctx);
