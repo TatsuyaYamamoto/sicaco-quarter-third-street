@@ -12,6 +12,7 @@
 
 ### TypeScript
 
+- ファイル名は camelCase か PascalCase にする（クラスを export するファイルは PascalCase）。ツールが名前を決めるファイル（`*.config.ts`、`wrangler types` や drizzle-kit の生成物など）は除く。
 - 関数の戻り値の型は、できるだけ明示する。読み手が実装を追わなくても戻り値が分かり、型チェックの負荷も下がるため。推論に任せるしかない場合や、書くとかえって複雑になる場合（例: Hono のルートを返す関数）は書かなくてよい。
 
 ### Comments
