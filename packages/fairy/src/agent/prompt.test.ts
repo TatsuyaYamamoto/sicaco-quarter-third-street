@@ -13,6 +13,7 @@ describe("buildSystemPrompt", () => {
 describe("buildConversationPrompt", () => {
   it("発言者を ID で表し、ID と人の対応を別の欄に書く", () => {
     const prompt = buildConversationPrompt({
+      platform: "line",
       conversationType: "group",
       history: [
         { personId: "p-master", type: "text", text: "おはよう", createdAt: "" },
@@ -26,7 +27,7 @@ describe("buildConversationPrompt", () => {
     expect(prompt).toBe(
       [
         "## 会話の場",
-        "グループ",
+        "LINE のグループ",
         "",
         "## この会話にいる人",
         "- P1: マスター",

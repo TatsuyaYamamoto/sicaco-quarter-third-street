@@ -96,6 +96,7 @@ export class ConversationAgent extends Agent<Cloudflare.Env> {
       model: createModel(config),
       system: systemPrompt,
       prompt: buildConversationPrompt({
+        platform: message.platform,
         conversationType: message.conversation.type,
         history,
         roles,
