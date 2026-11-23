@@ -15,7 +15,7 @@ import {
   resolveConversation,
   saveMessage,
 } from "../db/storage";
-import { type Role, roleOfPerson } from "../models/person";
+import { type Role, roleIdentifiedBy } from "../models/person";
 import { createModel, generateReply } from "./llm";
 import { buildConversationPrompt, buildSystemPrompt } from "./prompt";
 import type { IncomingMessage, Reply } from "./types";
@@ -70,8 +70,11 @@ export class ConversationAgent extends Agent<Cloudflare.Env> {
     const accountsByPerson = await getAccountsByPerson(db, personIds);
     const roles = new Map<string, Role>();
     for (const personId of personIds) {
-      const role = roleOfPerson(accountsByPerson.get(personId) ?? [], config);
-      if (role !== null) {
+      // Person の Account のどれかが役割を持つ Person を示していれば、その Person はその役割を持つ
+      const role = (accountsByPerson.get(personId) ?? [])
+        .map((account) => roleIdentifiedBy(account, config))
+        .find((role) => role !== null);
+      if (role) {
         roles.set(personId, role);
       }
     }
