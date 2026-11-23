@@ -128,21 +128,5 @@ export const createLineClient = (channelAccessToken: string) => {
         } satisfies messagingApi.ReplyMessageRequest),
       });
     },
-
-    /** 発言者のプロフィールを取得する。グループではグループメンバーのプロフィールを取得する */
-    getProfile: async (
-      conversation: IncomingMessage["conversation"],
-      userId: string,
-    ): Promise<{ displayName: string }> => {
-      const path =
-        conversation.type === "group"
-          ? `/group/${conversation.platformConversationId}/member/${userId}`
-          : `/profile/${userId}`;
-      const res = await request(path);
-      const { displayName } = await res.json<
-        messagingApi.UserProfileResponse | messagingApi.GroupUserProfileResponse
-      >();
-      return { displayName };
-    },
   };
 };

@@ -124,7 +124,7 @@ MVP 自体は OpenAI の SDK だけでも作れるが、機能追加（MCP に�
 | TypeScript の設定 | ルートの tsconfig で `@tsconfig/strictest` を継承し、各パッケージの tsconfig はルートの tsconfig を継承する。TypeScript もルートで管理する |
 | テスト | Vitest + `@cloudflare/vitest-plugin`（Workers のランタイム上で、D1・Durable Object を含めてテストする） |
 | HTTP のルーティング | Hono |
-| LINE Messaging API の呼び出し | 自前で `fetch` を使って実装する（署名検証・Reply API・プロフィール取得）。型だけ `@line/bot-sdk` のものを使う |
+| LINE Messaging API の呼び出し | 自前で `fetch` を使って実装する（署名検証・Reply API）。型だけ `@line/bot-sdk` のものを使う |
 | D1 へのアクセス | Drizzle ORM（マイグレーションは drizzle-kit で生成し、wrangler で適用する） |
 
 ## データモデル
