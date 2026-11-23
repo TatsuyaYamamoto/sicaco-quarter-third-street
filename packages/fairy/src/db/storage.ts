@@ -6,11 +6,12 @@
 
 import { and, desc, eq, inArray } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
+import type { Account } from "../models/person";
 import { accounts, conversations, messages, persons } from "./schema";
 
 export type Db = DrizzleD1Database;
 
-type Platform = (typeof accounts.$inferSelect)["platform"];
+type Platform = Account["platform"];
 
 /** 会話の履歴の 1 件 */
 export interface HistoryMessage {
@@ -31,7 +32,7 @@ export const resolveAccount = async (
   db: Db,
   { platform, platformUserId }: { platform: Platform; platformUserId: string },
   now: string,
-): Promise<typeof accounts.$inferSelect> => {
+): Promise<Account> => {
   const where = and(eq(accounts.platform, platform), eq(accounts.platformUserId, platformUserId));
   const existing = await db.select().from(accounts).where(where).get();
   if (existing) {
@@ -134,8 +135,8 @@ export const getRecentMessages = async (
 export const getAccountsByPerson = async (
   db: Db,
   personIds: string[],
-): Promise<Map<string, (typeof accounts.$inferSelect)[]>> => {
-  const result = new Map<string, (typeof accounts.$inferSelect)[]>();
+): Promise<Map<string, Account[]>> => {
+  const result = new Map<string, Account[]>();
   if (personIds.length === 0) {
     return result;
   }

@@ -7,6 +7,7 @@
 import type { messagingApi, webhook } from "@line/bot-sdk";
 import type { IncomingMessage } from "../agent/types";
 import type { Config } from "../config";
+import { roleOfAccount } from "../models/person";
 import { decodeBase64, verifyHmacSha256 } from "./utils";
 
 /**
@@ -75,8 +76,12 @@ export const isAcceptedConversation = (
   if (conversation.type === "group") {
     return conversation.platformConversationId === config.LINE_GROUP_ID_FAMILY;
   }
-  return [config.LINE_USER_ID_MASTER, config.LINE_USER_ID_ASSISTANT2].includes(
-    conversation.platformConversationId,
+  // DM は、相手の Account に役割（マスター・助手二号）があれば受け付ける
+  return (
+    roleOfAccount(
+      { platform: "line", platformUserId: conversation.platformConversationId },
+      config,
+    ) !== null
   );
 };
 

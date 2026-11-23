@@ -5,7 +5,7 @@
  */
 
 import type { HistoryMessage } from "../db/storage";
-import type { Role } from "./role";
+import type { Role } from "../models/person";
 import type { IncomingMessage } from "./types";
 
 const ROLE_LABELS = {

@@ -15,9 +15,9 @@ import {
   resolveConversation,
   saveMessage,
 } from "../db/storage";
+import { type Role, roleOfPerson } from "../models/person";
 import { createModel, generateReply } from "./llm";
 import { buildConversationPrompt, buildSystemPrompt } from "./prompt";
-import { resolveRoles } from "./role";
 import type { IncomingMessage, Reply } from "./types";
 
 const systemPrompt = buildSystemPrompt(fairyMd);
@@ -67,7 +67,14 @@ export class ConversationAgent extends Agent<Cloudflare.Env> {
     const personIds = [
       ...new Set(history.flatMap(({ personId }) => (personId === null ? [] : [personId]))),
     ];
-    const roles = resolveRoles(await getAccountsByPerson(db, personIds), config);
+    const accountsByPerson = await getAccountsByPerson(db, personIds);
+    const roles = new Map<string, Role>();
+    for (const personId of personIds) {
+      const role = roleOfPerson(accountsByPerson.get(personId) ?? [], config);
+      if (role !== null) {
+        roles.set(personId, role);
+      }
+    }
 
     const reply = await generateReply({
       model: createModel(config),
