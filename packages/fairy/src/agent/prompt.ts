@@ -5,10 +5,8 @@
  */
 
 import type { HistoryMessage } from "../db/storage";
+import type { Role } from "./role";
 import type { IncomingMessage } from "./types";
-
-/** 設定値で決まる役割 */
-export type Role = "master" | "assistant2";
 
 const ROLE_LABELS = {
   master: "マスター",

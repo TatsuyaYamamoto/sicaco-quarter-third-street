@@ -7,8 +7,7 @@
 import { Agent } from "agents";
 import { drizzle } from "drizzle-orm/d1";
 import fairyMd from "../../../../FAIRY.md";
-import { type Config, loadConfig } from "../config";
-import type { accounts } from "../db/schema";
+import { loadConfig } from "../config";
 import {
   getAccountsByPerson,
   getRecentMessages,
@@ -17,33 +16,11 @@ import {
   saveMessage,
 } from "../db/storage";
 import { createModel, generateReply } from "./llm";
-import { buildConversationPrompt, buildSystemPrompt, type Role } from "./prompt";
+import { buildConversationPrompt, buildSystemPrompt } from "./prompt";
+import { resolveRoles } from "./role";
 import type { IncomingMessage, Reply } from "./types";
 
 const systemPrompt = buildSystemPrompt(fairyMd);
-
-/**
- * Person ごとの役割を、紐付く Account と設定値から決める
- *
- * @see docs/design.md の「概念モデル」
- */
-export const resolveRoles = (
-  accountsByPerson: Map<string, (typeof accounts.$inferSelect)[]>,
-  config: Pick<Config, "LINE_USER_ID_MASTER" | "LINE_USER_ID_ASSISTANT2">,
-): Map<string, Role> => {
-  const roles = new Map<string, Role>();
-  for (const [personId, personAccounts] of accountsByPerson) {
-    const lineUserIds = personAccounts
-      .filter((account) => account.platform === "line")
-      .map((account) => account.platformUserId);
-    if (lineUserIds.includes(config.LINE_USER_ID_MASTER)) {
-      roles.set(personId, "master");
-    } else if (lineUserIds.includes(config.LINE_USER_ID_ASSISTANT2)) {
-      roles.set(personId, "assistant2");
-    }
-  }
-  return roles;
-};
 
 export class ConversationAgent extends Agent<Cloudflare.Env> {
   /** メッセージを受け取り、返信の内容を返す */
