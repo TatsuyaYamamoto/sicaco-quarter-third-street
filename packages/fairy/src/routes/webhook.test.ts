@@ -3,14 +3,14 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import { sign, textEvent } from "../../test/line";
 
 const { dispatch } = vi.hoisted(() => ({ dispatch: vi.fn() }));
-vi.mock("../agent/dispatch", () => ({ dispatchMessage: dispatch }));
+vi.mock("../agent/dispatch", () => ({ dispatchMessageToAgent: dispatch }));
 
 describe("POST /webhook/line", () => {
   let webhookRoutes: typeof import("./webhook").webhookRoutes;
 
   beforeAll(async () => {
     // テストの実行環境は Worker のエントリポイントを先に読み込むので、このモジュールも vi.mock より先に読み込まれている。
-    // 読み込み直して、モックした dispatchMessage を使わせる
+    // 読み込み直して、モックした dispatchMessageToAgent を使わせる
     vi.resetModules();
     ({ webhookRoutes } = await import("./webhook"));
   });

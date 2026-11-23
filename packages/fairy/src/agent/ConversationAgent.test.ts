@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/d1";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { testSecrets } from "../../test/secrets";
 import { conversations, messages } from "../db/schema";
-import { dispatchMessage } from "./dispatch";
+import { dispatchMessageToAgent } from "./dispatch";
 import type { IncomingMessage } from "./types";
 
 const db = drizzle(env.DB);
@@ -70,7 +70,7 @@ describe("ConversationAgent", () => {
 
   it("メッセージを保存して返信を生成し、Fairy の発言も保存する", async () => {
     const message = textMessage("おはよう");
-    const reply = await dispatchMessage(env, message);
+    const reply = await dispatchMessageToAgent(env, message);
 
     expect(reply).toEqual({ type: "text", text: "はい、マスター。" });
     const request = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
@@ -88,14 +88,14 @@ describe("ConversationAgent", () => {
   it("返信しないときは、Fairy の発言を保存しない", async () => {
     fetchMock.mockImplementation(async () => openaiResponse({ should_reply: false, reply: null }));
     const message = textMessage("独り言");
-    expect(await dispatchMessage(env, message)).toEqual({ type: "none" });
+    expect(await dispatchMessageToAgent(env, message)).toEqual({ type: "none" });
     expect(await savedTexts(message.conversation.platformConversationId)).toEqual(["独り言"]);
   });
 
   it("すでに受け取ったメッセージには返信しない", async () => {
     const message = textMessage("再送");
-    await dispatchMessage(env, message);
-    expect(await dispatchMessage(env, message)).toEqual({ type: "none" });
+    await dispatchMessageToAgent(env, message);
+    expect(await dispatchMessageToAgent(env, message)).toEqual({ type: "none" });
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 });

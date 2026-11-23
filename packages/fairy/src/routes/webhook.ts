@@ -4,7 +4,7 @@
 
 import type { webhook } from "@line/bot-sdk";
 import { Hono } from "hono";
-import { dispatchMessage } from "../agent/dispatch";
+import { dispatchMessageToAgent } from "../agent/dispatch";
 import { loadConfig } from "../config";
 import {
   createLineClient,
@@ -41,7 +41,7 @@ export const webhookRoutes = new Hono<{ Bindings: Env }>().post(
       if (!message || !isAcceptedConversation(message.conversation, config)) {
         return;
       }
-      const reply = await dispatchMessage(c.env, message);
+      const reply = await dispatchMessageToAgent(c.env, message);
       if (reply.type === "text") {
         await client.reply(event.replyToken, reply.text);
       }
