@@ -7,7 +7,7 @@
  */
 
 /** 会話に投稿された 1 件のメッセージのうち、プラットフォームに依存しない部分 */
-type IncomingMessageBase = {
+interface IncomingMessageBase {
   conversation: {
     type: "group" | "dm";
   };
@@ -18,12 +18,12 @@ type IncomingMessageBase = {
   };
   /** 送信日時（ISO 8601） */
   sentAt: string;
-};
+}
 
-/** 会話に投稿された 1 件のメッセージのうち、LINE 固有の部分 */
-type LineIncomingMessage = {
+/** LINE で会話に投稿された 1 件のメッセージ */
+interface LineIncomingMessage extends IncomingMessageBase {
   platform: "line";
-  conversation: {
+  conversation: IncomingMessageBase["conversation"] & {
     /** グループなら groupId、DM なら相手の userId */
     platformConversationId: string;
   };
@@ -31,15 +31,15 @@ type LineIncomingMessage = {
     /** userId */
     platformUserId: string;
   };
-  message: {
+  message: IncomingMessageBase["message"] & {
     platformMessageId: string;
     /** 元の Webhook のイベント */
     payloadJson: string;
   };
-};
+}
 
-/** 会話に投稿された 1 件のメッセージ。プラットフォームが増えたら、固有の部分を union にする */
-export type IncomingMessage = IncomingMessageBase & LineIncomingMessage;
+/** 会話に投稿された 1 件のメッセージ。プラットフォームが増えたら union にする */
+export type IncomingMessage = LineIncomingMessage;
 
 /** Agent が返す返信の内容 */
 export type Reply =
