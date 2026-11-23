@@ -12,9 +12,9 @@ const secretsSchema = z.object({
   LINE_CHANNEL_SECRET: nonEmpty,
   LINE_CHANNEL_ACCESS_TOKEN: nonEmpty,
   OPENAI_API_KEY: nonEmpty,
-  LINE_MASTER_USER_ID: nonEmpty,
-  LINE_ASSISTANT2_USER_ID: nonEmpty,
-  LINE_FAMILY_GROUP_ID: nonEmpty,
+  LINE_USER_ID_MASTER: nonEmpty,
+  LINE_USER_ID_ASSISTANT2: nonEmpty,
+  LINE_GROUP_ID_FAMILY: nonEmpty,
 });
 
 /** wrangler.jsonc の vars に書く値 */

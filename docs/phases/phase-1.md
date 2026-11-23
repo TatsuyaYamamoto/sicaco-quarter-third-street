@@ -202,9 +202,9 @@ sequenceDiagram
 | `LINE_CHANNEL_SECRET` | LINE の Channel Secret（署名検証に使う） | secrets | — |
 | `LINE_CHANNEL_ACCESS_TOKEN` | LINE の Channel Access Token（返信・プロフィール取得に使う） | secrets | — |
 | `OPENAI_API_KEY` | OpenAI の API Key | secrets | — |
-| `LINE_MASTER_USER_ID` | マスターの LINE userId | secrets | — |
-| `LINE_ASSISTANT2_USER_ID` | 助手二号の LINE userId | secrets | — |
-| `LINE_FAMILY_GROUP_ID` | 家族グループの groupId。**[MVP]** 受け付けるグループを `conversations` テーブルで管理するようになったら不要になる | secrets | — |
+| `LINE_USER_ID_MASTER` | マスターの LINE userId | secrets | — |
+| `LINE_USER_ID_ASSISTANT2` | 助手二号の LINE userId | secrets | — |
+| `LINE_GROUP_ID_FAMILY` | 家族グループの groupId。**[MVP]** 受け付けるグループを `conversations` テーブルで管理するようになったら不要になる | secrets | — |
 | `OPENAI_MODEL` | LLM のモデル（[LLM のモデルと会話履歴の件数](#llm-のモデルと会話履歴の件数)） | vars | `gpt-6-luna` **[MVP]** |
 | `OPENAI_REASONING_EFFORT` | reasoning effort（[LLM のモデルと会話履歴の件数](#llm-のモデルと会話履歴の件数)） | vars | `none` **[MVP]** |
 | `OPENAI_TIMEOUT_SECONDS` | LLM の呼び出しのタイムアウト（秒）（[基本の流れ](#基本の流れ)） | vars | `25` |

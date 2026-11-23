@@ -2,6 +2,7 @@
 
 ## 2026-11-23
 
+* **Update**: [Phase 1 の詳細設計](phases/phase-1.md) の設定値のキーの名前を、`LINE_USER_ID_MASTER` / `LINE_USER_ID_ASSISTANT2` / `LINE_GROUP_ID_FAMILY` に変えた。何の ID かを先に書き、同じ種類の設定が並ぶようにするため。
 * **Update**: [全体設計](design.md) を Phase 1 の雛形の実装に合わせて修正した。
   * 「開発ツールとライブラリ」: テストに使うパッケージを `@cloudflare/vitest-plugin` に変えた。`@cloudflare/vitest-pool-workers` は deprecated で、改名されていたため。あわせて、TypeScript の設定に `@tsconfig/strictest` を使うことと、依存のバージョンをすべて固定することを追加した。
   * 「データモデル」: `conversations` の `(platform, platform_conversation_id)` と、`messages` の `(conversation_id, platform_message_id)` を一意にした。同じ会話の場を二重に作らないため、同じメッセージを重複して保存しないため。
