@@ -1,6 +1,8 @@
-import { index, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+/**
+ * @file D1 のテーブル定義。各テーブル・カラムの説明は docs/design.md の「データモデル」を参照
+ */
 
-// テーブル定義は docs/design.md の「データモデル」を参照
+import { index, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const persons = sqliteTable("persons", {
   id: text("id").primaryKey(),
@@ -54,7 +56,7 @@ export const messages = sqliteTable(
     conversationId: text("conversation_id")
       .notNull()
       .references(() => conversations.id),
-    // Fairy 自身の発言は NULL
+    /** 発言者。Fairy 自身の発言は NULL */
     accountId: text("account_id").references(() => accounts.id),
     type: text("type", { enum: ["text", "sticker"] }).notNull(),
     text: text("text"),

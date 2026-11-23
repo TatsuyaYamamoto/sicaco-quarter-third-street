@@ -40,6 +40,7 @@ describe("マイグレーション", () => {
   it("同じ会話で同じ platform_message_id は保存できない", async () => {
     const db = drizzle(env.DB);
     const now = new Date().toISOString();
+    // テストごとにはストレージが分かれないので、ほかのテストと ID が重ならないようにする
     await db.insert(conversations).values({
       id: "c2",
       platform: "line",

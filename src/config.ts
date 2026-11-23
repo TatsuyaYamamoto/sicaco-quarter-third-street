@@ -1,6 +1,8 @@
-import { z } from "zod";
+/**
+ * @file 設定値の読み出しと検証。各設定値の説明は docs/phases/phase-1.md の「設定値」を参照
+ */
 
-// 設定値は docs/phases/phase-1.md の「設定値」を参照
+import { z } from "zod";
 
 const nonEmpty = z.string().min(1);
 const positiveInt = z.coerce.number().int().positive();
