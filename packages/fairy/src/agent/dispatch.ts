@@ -5,7 +5,7 @@ import type { IncomingMessage, Reply } from "./types";
 export const dispatchMessageToAgent = async (
   env: Env,
   message: IncomingMessage,
-): Promise<Reply> => {
+): Promise<Reply | undefined> => {
   // ConversationAgent は会話ごとに 1 つ。プラットフォームと会話の ID で決める
   const agent = await getAgentByName(
     env.CONVERSATION_AGENT,

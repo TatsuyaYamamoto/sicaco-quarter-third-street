@@ -34,7 +34,7 @@ export const generateReply = async ({
   system: string;
   prompt: string;
   config: Pick<Config, "OPENAI_REASONING_EFFORT" | "OPENAI_TIMEOUT_SECONDS">;
-}): Promise<Reply> => {
+}): Promise<Reply | undefined> => {
   try {
     const { output } = await generateText({
       model,
@@ -54,11 +54,12 @@ export const generateReply = async ({
       },
       abortSignal: AbortSignal.timeout(config.OPENAI_TIMEOUT_SECONDS * 1000),
     });
-    return output.should_reply && output.reply
-      ? { type: "text", text: output.reply }
-      : { type: "none" };
+    if (!output.should_reply || output.reply === null) {
+      return undefined;
+    }
+    return { type: "text", text: output.reply };
   } catch (error) {
     console.error("failed to generate reply", error);
-    return { type: "none" };
+    return undefined;
   }
 };

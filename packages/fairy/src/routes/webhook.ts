@@ -42,7 +42,7 @@ export const webhookRoutes = new Hono<{ Bindings: Env }>().post(
         return;
       }
       const reply = await dispatchMessageToAgent(c.env, message);
-      if (reply.type === "text") {
+      if (reply) {
         await client.reply(event.replyToken, reply.text);
       }
     };

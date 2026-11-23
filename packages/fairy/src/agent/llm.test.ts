@@ -30,14 +30,12 @@ describe("generateReply", () => {
     });
   });
 
-  it("返信しないなら「返信なし」を返す", async () => {
+  it("返信しないなら、返信を返さない", async () => {
     const model = modelReturning('{"should_reply":false,"reply":null}');
-    expect(await generateReply({ model, system: "", prompt: "", config })).toEqual({
-      type: "none",
-    });
+    expect(await generateReply({ model, system: "", prompt: "", config })).toBeUndefined();
   });
 
-  it("タイムアウトしたら「返信なし」を返し、エラーをログに残す", async () => {
+  it("タイムアウトしたら返信を返さず、エラーをログに残す", async () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
     const model = new MockLanguageModelV4({
       doGenerate: ({ abortSignal }) =>
@@ -45,9 +43,7 @@ describe("generateReply", () => {
           abortSignal?.addEventListener("abort", () => reject(abortSignal.reason));
         }),
     });
-    expect(await generateReply({ model, system: "", prompt: "", config })).toEqual({
-      type: "none",
-    });
+    expect(await generateReply({ model, system: "", prompt: "", config })).toBeUndefined();
     expect(error).toHaveBeenCalled();
   });
 });

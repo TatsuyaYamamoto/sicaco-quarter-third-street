@@ -23,8 +23,8 @@ import type { IncomingMessage, Reply } from "./types";
 const systemPrompt = buildSystemPrompt(fairyMd);
 
 export class ConversationAgent extends Agent<Cloudflare.Env> {
-  /** メッセージを受け取り、返信の内容を返す */
-  async handleMessage(message: IncomingMessage): Promise<Reply> {
+  /** メッセージを受け取り、返信の内容を返す。返信しないときは undefined */
+  async handleMessage(message: IncomingMessage): Promise<Reply | undefined> {
     const config = loadConfig(this.env);
     const db = drizzle(this.env.DB);
     const now = new Date().toISOString();
@@ -60,7 +60,7 @@ export class ConversationAgent extends Agent<Cloudflare.Env> {
     });
     if (!saved) {
       // すでに受け取ったメッセージ（Webhook の再送など）なので、二重に返信しない
-      return { type: "none" };
+      return undefined;
     }
 
     const history = await getRecentMessages(db, conversation.id, config.HISTORY_LIMIT);
@@ -91,7 +91,7 @@ export class ConversationAgent extends Agent<Cloudflare.Env> {
       config,
     });
 
-    if (reply.type === "text") {
+    if (reply) {
       // 返信の内容を返すのと並行して保存する（docs/phases/phase-1.md の「応答速度と D1 への保存のタイミング」）
       this.ctx.waitUntil(
         saveMessage(db, {

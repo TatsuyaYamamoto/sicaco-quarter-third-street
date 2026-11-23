@@ -88,14 +88,14 @@ describe("ConversationAgent", () => {
   it("返信しないときは、Fairy の発言を保存しない", async () => {
     fetchMock.mockImplementation(async () => openaiResponse({ should_reply: false, reply: null }));
     const message = textMessage("独り言");
-    expect(await dispatchMessageToAgent(env, message)).toEqual({ type: "none" });
+    expect(await dispatchMessageToAgent(env, message)).toBeUndefined();
     expect(await savedTexts(message.conversation.platformConversationId)).toEqual(["独り言"]);
   });
 
   it("すでに受け取ったメッセージには返信しない", async () => {
     const message = textMessage("再送");
     await dispatchMessageToAgent(env, message);
-    expect(await dispatchMessageToAgent(env, message)).toEqual({ type: "none" });
+    expect(await dispatchMessageToAgent(env, message)).toBeUndefined();
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 });

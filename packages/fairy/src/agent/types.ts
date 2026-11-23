@@ -46,9 +46,7 @@ interface LineIncomingMessage extends IncomingMessageBase {
 /** 会話に投稿された 1 件のメッセージ。プラットフォームが増えたら union にする */
 export type IncomingMessage = LineIncomingMessage;
 
-/** Agent が返す返信の内容 */
+/** Agent が返す返信の内容。返信しないときは、Agent は Reply を返さない（undefined を返す） */
 export type Reply =
   /** テキストで返信する */
-  | { type: "text"; text: string }
-  /** 返信しない */
-  | { type: "none" };
+  { type: "text"; text: string };

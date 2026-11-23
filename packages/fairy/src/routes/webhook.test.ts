@@ -60,8 +60,8 @@ describe("POST /webhook/line", () => {
     expect(sentReplies()).toEqual([{ replyToken: "reply-100", text: "はい" }]);
   });
 
-  it("Agent が「返信なし」を返したら送らない", async () => {
-    dispatch.mockResolvedValue({ type: "none" });
+  it("Agent が返信を返さなければ送らない", async () => {
+    dispatch.mockResolvedValue(undefined);
     await post([textEvent({ type: "user", userId: "Umaster" })]);
     expect(sentReplies()).toEqual([]);
   });
