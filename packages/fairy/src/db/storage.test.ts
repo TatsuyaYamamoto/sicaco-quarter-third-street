@@ -15,7 +15,10 @@ const now = "2026-11-24T00:00:00.000Z";
 
 // テストごとにはストレージが分かれないので、ほかのテストと ID が重ならないようにする
 let seq = 0;
-const unique = (prefix: string): string => `${prefix}-storage-${++seq}`;
+const unique = (prefix: string): string => {
+  seq += 1;
+  return `${prefix}-storage-${seq}`;
+};
 
 describe("resolveAccount", () => {
   it("なければ Person と一緒に作り、あればそれを返す", async () => {
@@ -50,8 +53,12 @@ describe("saveMessage / getRecentMessages", () => {
       { platform: "line", platformConversationId: unique("C"), type: "group" },
       now,
     );
-    const save = (text: string, createdAt: string, accountId: string | null = account.id) =>
-      saveMessage(db, {
+    const save = (
+      text: string,
+      createdAt: string,
+      accountId: string | null = account.id,
+    ): Promise<boolean> => {
+      return saveMessage(db, {
         conversationId: conversation.id,
         accountId,
         type: "text",
@@ -60,6 +67,7 @@ describe("saveMessage / getRecentMessages", () => {
         platformMessageId: accountId ? text : null,
         createdAt,
       });
+    };
     return { account, conversation, save };
   };
 

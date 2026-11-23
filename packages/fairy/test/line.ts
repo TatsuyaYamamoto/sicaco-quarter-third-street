@@ -26,13 +26,15 @@ export const textEvent = (
   source: Record<string, string>,
   text = "こんにちは",
   id = "100",
-): Record<string, unknown> => ({
-  type: "message",
-  mode: "active",
-  timestamp: 1_795_000_000_000,
-  source,
-  webhookEventId: `event-${id}`,
-  deliveryContext: { isRedelivery: false },
-  replyToken: `reply-${id}`,
-  message: { type: "text", id, quoteToken: "q", text },
-});
+): Record<string, unknown> => {
+  return {
+    type: "message",
+    mode: "active",
+    timestamp: 1_795_000_000_000,
+    source,
+    webhookEventId: `event-${id}`,
+    deliveryContext: { isRedelivery: false },
+    replyToken: `reply-${id}`,
+    message: { type: "text", id, quoteToken: "q", text },
+  };
+};

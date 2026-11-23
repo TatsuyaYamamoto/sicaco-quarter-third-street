@@ -34,10 +34,13 @@ export type LineMessageEvent = webhook.MessageEvent & {
  *
  * 扱うのはテキストとスタンプのメッセージイベントだけ（docs/phases/phase-1.md の「LINE 受け口モジュールの処理フロー」）
  */
-export const isLineMessageEvent = (event: webhook.Event): event is LineMessageEvent =>
-  event.type === "message" &&
-  event.replyToken !== undefined &&
-  (event.message.type === "text" || event.message.type === "sticker");
+export const isLineMessageEvent = (event: webhook.Event): event is LineMessageEvent => {
+  return (
+    event.type === "message" &&
+    event.replyToken !== undefined &&
+    (event.message.type === "text" || event.message.type === "sticker")
+  );
+};
 
 /** メッセージイベントを IncomingMessage に変換する。発言者や会話が分からないイベントなら null を返す */
 export const toIncomingMessage = (event: LineMessageEvent): IncomingMessage | null => {

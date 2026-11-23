@@ -1,5 +1,5 @@
 import type { webhook } from "@line/bot-sdk";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, type MockInstance, vi } from "vitest";
 import { sign, textEvent } from "../../test/line";
 import { testSecrets } from "../../test/secrets";
 import {
@@ -94,8 +94,9 @@ describe("isAcceptedConversation", () => {
 });
 
 describe("createLineClient", () => {
-  const mockFetch = (response: Response) =>
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(response);
+  const mockFetch = (response: Response): MockInstance<typeof fetch> => {
+    return vi.spyOn(globalThis, "fetch").mockResolvedValue(response);
+  };
 
   afterEach(() => {
     vi.restoreAllMocks();

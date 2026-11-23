@@ -28,11 +28,12 @@ describe("POST /webhook/line", () => {
   });
 
   /** Reply API に送った replyToken と本文 */
-  const sentReplies = (): { replyToken: string; text: string }[] =>
-    fetchMock.mock.calls.map(([, init]) => {
+  const sentReplies = (): { replyToken: string; text: string }[] => {
+    return fetchMock.mock.calls.map(([, init]) => {
       const { replyToken, messages } = JSON.parse(String(init?.body));
       return { replyToken, text: messages[0].text };
     });
+  };
 
   const post = async (events: unknown[], signature?: string): Promise<Response> => {
     const body = JSON.stringify({ destination: "Ubot", events });
