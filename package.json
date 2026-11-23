@@ -16,21 +16,22 @@
     "db:migrate:remote": "wrangler d1 migrations apply fairy --remote"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^4.0.122",
-    "agents": "^0.34.0",
-    "ai": "^7.0.179",
-    "drizzle-orm": "^0.45.4",
-    "hono": "^4.13.19",
-    "zod": "^4.6.7"
+    "@ai-sdk/openai": "4.0.122",
+    "agents": "0.34.0",
+    "ai": "7.0.179",
+    "drizzle-orm": "0.45.4",
+    "hono": "4.13.19",
+    "zod": "4.6.7"
   },
   "devDependencies": {
-    "@cloudflare/vitest-plugin": "^1.9.0",
-    "@types/node": "^22.20.5",
-    "drizzle-kit": "^0.31.11",
-    "oxfmt": "^0.79.0",
-    "oxlint": "^1.94.0",
-    "typescript": "^7.0.2",
-    "vitest": "^5.1.1",
-    "wrangler": "^4.166.0"
+    "@cloudflare/vitest-plugin": "1.9.0",
+    "@tsconfig/strictest": "2.0.9",
+    "@types/node": "22.20.5",
+    "drizzle-kit": "0.31.11",
+    "oxfmt": "0.79.0",
+    "oxlint": "1.94.0",
+    "typescript": "7.0.2",
+    "vitest": "5.1.1",
+    "wrangler": "4.166.0"
   }
 }

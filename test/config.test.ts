@@ -18,9 +18,9 @@ const baseEnv = {
 describe("loadConfig", () => {
   it("vars の文字列を数値に変換する", () => {
     const config = loadConfig(baseEnv);
-    expect(config.openai.timeoutMs).toBe(25_000);
-    expect(config.historyLimit).toBe(30);
-    expect(config.maxRegenerations).toBe(10);
+    expect(config.OPENAI_TIMEOUT_SECONDS).toBe(25);
+    expect(config.HISTORY_LIMIT).toBe(30);
+    expect(config.MAX_REGENERATIONS).toBe(10);
   });
 
   it("secrets が空なら例外を投げる", () => {
