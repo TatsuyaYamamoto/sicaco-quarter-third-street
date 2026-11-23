@@ -2,7 +2,7 @@
 
 ## 2026-11-23
 
-* **Update**: [全体設計](design.md) の「開発ツールとライブラリ」に、リポジトリを pnpm workspace の monorepo にし、Worker `fairy` を `packages/fairy` に置くことを追加した。今後パッケージが増えたときに、あとから monorepo に移行する手間を避けるため。
+* **Update**: [全体設計](design.md) の「開発ツールとライブラリ」に、リポジトリを pnpm workspace の monorepo にし、Worker `fairy` を `packages/fairy` に置くことを追加した。TypeScript と tsconfig はルートで管理し、各パッケージから継承する。今後パッケージが増えたときに、あとから monorepo に移行する手間を避けるため。
 * **Update**: [Phase 1 の詳細設計](phases/phase-1.md) の設定値のキーの名前を、`LINE_USER_ID_MASTER` / `LINE_USER_ID_ASSISTANT2` / `LINE_GROUP_ID_FAMILY` に変えた。何の ID かを先に書き、同じ種類の設定が並ぶようにするため。
 * **Update**: [全体設計](design.md) を Phase 1 の雛形の実装に合わせて修正した。
   * 「開発ツールとライブラリ」: テストに使うパッケージを `@cloudflare/vitest-plugin` に変えた。`@cloudflare/vitest-pool-workers` は deprecated で、改名されていたため。あわせて、TypeScript の設定に `@tsconfig/strictest` を使うことと、依存のバージョンをすべて固定することを追加した。

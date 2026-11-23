@@ -8,12 +8,18 @@ importers:
 
   .:
     devDependencies:
+      '@tsconfig/strictest':
+        specifier: 2.0.9
+        version: 2.0.9
       oxfmt:
         specifier: 0.79.0
         version: 0.79.0
       oxlint:
         specifier: 1.94.0
         version: 1.94.0
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
 
   packages/fairy:
     dependencies:
@@ -39,18 +45,12 @@ importers:
       '@cloudflare/vitest-plugin':
         specifier: 1.9.0
         version: 1.9.0(@types/node@22.20.5)(vitest@5.1.1(@opentelemetry/api@1.10.0)(@types/node@22.20.5)(vite@8.3.8(@types/node@22.20.5)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1)))
-      '@tsconfig/strictest':
-        specifier: 2.0.9
-        version: 2.0.9
       '@types/node':
         specifier: 22.20.5
         version: 22.20.5
       drizzle-kit:
         specifier: 0.31.11
         version: 0.31.11
-      typescript:
-        specifier: 7.0.2
-        version: 7.0.2
       vitest:
         specifier: 5.1.1
         version: 5.1.1(@opentelemetry/api@1.10.0)(@types/node@22.20.5)(vite@8.3.8(@types/node@22.20.5)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))

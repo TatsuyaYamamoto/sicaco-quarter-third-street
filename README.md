@@ -25,6 +25,7 @@ pnpm install
 | コマンド | 内容 |
 | --- | --- |
 | `pnpm lint` / `pnpm format` | リポジトリ全体の lint / format |
-| `pnpm typecheck` / `pnpm test` | 全パッケージの型チェック / テスト |
+| `pnpm typecheck` | ルートと全パッケージの型チェック |
+| `pnpm test` | 全パッケージのテスト |
 
 パッケージごとの手順は、各パッケージの README を参照。
