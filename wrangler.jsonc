@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fairy",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "fairy",
+      // `wrangler d1 create fairy` で作成した ID に置き換える
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations",
+    },
+  ],
+  // secrets（LINE_CHANNEL_SECRET など）は wrangler secret put で登録する。ローカルでは .dev.vars に書く（.dev.vars.example を参照）
+  "vars": {
+    "OPENAI_MODEL": "gpt-6-luna",
+    "OPENAI_REASONING_EFFORT": "none",
+    "OPENAI_TIMEOUT_SECONDS": "25",
+    "HISTORY_LIMIT": "30",
+    "MAX_REGENERATIONS": "10",
+  },
+}
