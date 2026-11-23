@@ -1,31 +1,27 @@
 /**
- * @file POST /webhook/line: LINE の Webhook の受け口
- *
- * @see docs/phases/phase-1.md の「LINE 受け口モジュールの処理フロー」
+ * @file /webhook 配下のエンドポイント。プラットフォームから届く Webhook の受け口
  */
 
 import type { webhook } from "@line/bot-sdk";
 import { Hono } from "hono";
-import type { DispatchMessage } from "../../agent/types";
-import { loadConfig } from "../../config";
+import { dispatchMessage } from "../agent/dispatch";
+import { loadConfig } from "../config";
 import {
   createLineClient,
   isAcceptedConversation,
   isLineMessageEvent,
-  type LineClient,
   toIncomingMessage,
   verifySignature,
-} from "../../helpers/line";
+} from "../helpers/line";
 
-type Dependencies = {
-  /** 受け付けたメッセージを Agent に渡す */
-  dispatch: DispatchMessage;
-  /** テストで差し替えるためのもの。省略すると Channel Access Token でクライアントを作る */
-  createClient?: (channelAccessToken: string) => LineClient;
-};
-
-export const createLineWebhook = ({ dispatch, createClient = createLineClient }: Dependencies) =>
-  new Hono<{ Bindings: Env }>().post("/", async (c) => {
+export const webhookRoutes = new Hono<{ Bindings: Env }>().post(
+  /**
+   * LINE の Webhook
+   *
+   * @see docs/phases/phase-1.md の「LINE 受け口モジュールの処理フロー」
+   */
+  "/line",
+  async (c) => {
     const config = loadConfig(c.env);
     const body = await c.req.text();
     const signature = c.req.header("x-line-signature") ?? "";
@@ -35,7 +31,7 @@ export const createLineWebhook = ({ dispatch, createClient = createLineClient }:
 
     // 署名を検証したので、LINE から届いた内容として型を信頼する
     const { events } = JSON.parse(body) as webhook.CallbackRequest;
-    const client = createClient(config.LINE_CHANNEL_ACCESS_TOKEN);
+    const client = createLineClient(config.LINE_CHANNEL_ACCESS_TOKEN);
 
     const handleEvent = async (event: webhook.Event): Promise<void> => {
       if (!isLineMessageEvent(event)) {
@@ -45,7 +41,7 @@ export const createLineWebhook = ({ dispatch, createClient = createLineClient }:
       if (!message || !isAcceptedConversation(message.conversation, config)) {
         return;
       }
-      const reply = await dispatch(message);
+      const reply = await dispatchMessage(c.env, message);
       if (reply) {
         await client.reply(event.replyToken, reply.text);
       }
@@ -62,4 +58,5 @@ export const createLineWebhook = ({ dispatch, createClient = createLineClient }:
       }),
     );
     return c.body(null, 200);
-  });
+  },
+);

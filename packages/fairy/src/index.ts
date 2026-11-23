@@ -1,10 +1,6 @@
 import { Hono } from "hono";
-import { createLineWebhook } from "./routes/webhook/line";
+import { webhookRoutes } from "./routes/webhook";
 
-const app = new Hono<{ Bindings: Env }>().route(
-  "/webhook/line",
-  // TODO: ConversationAgent に渡す。それまでは返信しない
-  createLineWebhook({ dispatch: async () => null }),
-);
+const app = new Hono<{ Bindings: Env }>().route("/webhook", webhookRoutes);
 
 export default app;

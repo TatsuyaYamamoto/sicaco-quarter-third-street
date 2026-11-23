@@ -27,6 +27,3 @@ export type IncomingMessage = {
 
 /** Agent が返す返信の内容。null は「返信なし」 */
 export type Reply = { text: string } | null;
-
-/** メッセージを Agent に渡し、返信の内容を受け取る */
-export type DispatchMessage = (message: IncomingMessage) => Promise<Reply>;
