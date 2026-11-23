@@ -2,6 +2,9 @@
 
 ## 2026-11-23
 
+* **Update**: [全体設計](design.md) を Phase 1 の雛形の実装に合わせて修正した。
+  * 「開発ツールとライブラリ」: テストに使うパッケージを `@cloudflare/vitest-plugin` に変えた。`@cloudflare/vitest-pool-workers` は deprecated で、改名されていたため。あわせて、TypeScript の設定に `@tsconfig/strictest` を使うことと、依存のバージョンをすべて固定することを追加した。
+  * 「データモデル」: `conversations` の `(platform, platform_conversation_id)` と、`messages` の `(conversation_id, platform_message_id)` を一意にした。同じ会話の場を二重に作らないため、同じメッセージを重複して保存しないため。
 * **Update**: [全体設計](design.md) に「開発ツールとライブラリ」の節を追加した。pnpm、oxc（oxlint / oxfmt）、Vitest + `@cloudflare/vitest-pool-workers`、Hono、Drizzle ORM を使い、LINE Messaging API の呼び出しは自前で実装する。Phase 1 の実装を始めるにあたって決めた。
 * **Update**: [全体設計](design.md) から「`ConversationAgent` は SQLite-backed の Durable Object で作る」という記述を削除した。新しく作れる Durable Object は SQLite-backed だけで、設計として選ぶものではないため。
 * **Update**: [Phase 1 の詳細設計](phases/phase-1.md) の「生成中に新しいメッセージが届いた場合」で、返信を送る呼び出しを決めた。返信は再生成のきっかけになった最新のメッセージの呼び出しが送り、中断された生成を待っていた呼び出しは「返信なし」で終わる。どの呼び出しも待つのを 1 回分の生成時間にとどめ、`ctx.waitUntil` の時間制限（最大 30 秒）に収めるため。再生成の上限に達したあとの振る舞いは、実装が単純になるものにした。
