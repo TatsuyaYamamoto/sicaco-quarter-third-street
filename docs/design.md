@@ -25,9 +25,12 @@ sources:
   - id: agents-repo
     resource: https://github.com/cloudflare/agents
     title: cloudflare/agents (GitHub)
-  - id: cf-openai-agents
-    resource: https://blog.cloudflare.com/building-agents-with-openai-and-cloudflares-agents-sdk/
-    title: Building agents with OpenAI and Cloudflare's Agents SDK
+  - id: cf-agents-mcp-client
+    resource: https://developers.cloudflare.com/agents/model-context-protocol/apis/client-api/
+    title: "Agents: MCP Client API"
+  - id: ai-sdk-openai
+    resource: https://ai-sdk.dev/providers/ai-sdk-providers/openai
+    title: "AI SDK Providers: OpenAI"
 ---
 
 # 全体設計
@@ -86,7 +89,9 @@ Fairy を AI Agent として育てていくと、LINE・専用 UI・音声のど
 | 処理が直列化される | 同じ会話で複数の返信が同時に作られて競合することがない |
 | （将来）Alarms / WebSocket | 自発的な話しかけのタイマー（Phase 4）、iPad の専用 UI との常時接続（Phase 5〜7）にも使える |
 
-- Durable Objects を無料プランで使えるかは要確認（[実装の最初に確認すること](phases/phase-1.md#実装の最初に確認すること)）。使えなくても Workers Paid（月 $5）なら予算内に収まる。
+### Cloudflare のプラン
+
+Workers Paid で動かす。オーナーの Cloudflare アカウントがすでに Workers Paid を使っていて、プランはアカウント単位で決まるため。Workers Free との違いは [Cloudflare Workers のプランの比較](comparison/cloudflare-plans.md) にまとめている。
 
 ### Agent フレームワークとして Cloudflare Agents SDK を最初から最小限使う
 
@@ -102,7 +107,12 @@ MVP 自体は OpenAI の SDK だけでも作れるが、機能追加（MCP に�
 | 本設計との相性 | 「生成中の新着で中断・再生成」を Durable Object 上で自前制御する設計とそのまま噛み合う | Mastra 側の Agent 実行・メモリ管理と、自前の制御との合わせ込みが必要 |
 
 - **Cloudflare Agents SDK を採用し、MVP では `ConversationAgent` を Agent クラスで作るところまでにとどめる**。**[MVP]** MCP・スケジュールなどは使う機能が必要になったフェーズで使い始める。
-- LLM の呼び出しは OpenAI の SDK（または Agents SDK と組み合わせやすい SDK）を使う。具体的な組み合わせは要確認（[実装の最初に確認すること](phases/phase-1.md#実装の最初に確認すること)）。[^cf-openai-agents]
+- LLM の呼び出しは、**AI SDK（`ai` + `@ai-sdk/openai`）で OpenAI に直接送る**。候補の比較は [LLM の呼び出し方法の比較](comparison/llm-invocation.md) にまとめている。
+  - 要件（Workers で動く、Structured Outputs、`AbortSignal` での中断、reasoning effort の指定）をすべて公式ドキュメントで確認できたのは、OpenAI に直接送る組み合わせだけだった。
+  - そのうち AI SDK は、Agents SDK の MCP クライアント（`getAITools()`）とそのままつながり[^cf-agents-mcp-client]、provider を差し替えれば OpenAI 以外のモデルも同じ書き方で呼べる[^ai-sdk-openai]。
+  - Cloudflare AI Gateway は経由しない。**[MVP]** 経由した場合に、strict の構造化出力・reasoning effort の指定が OpenAI まで届くか、中断が伝わるか、`gpt-6-luna` を使えるかが、ドキュメントで確認できないため。MVP ができたら、実際に呼んで確かめたうえで改めて検討する（[後のフェーズで決めること](plan.md#後のフェーズで決めること)）。
+  - OpenAI の strict モードの構造化出力では、スキーマに optional なプロパティを使えない（`.nullable()` で表す）[^ai-sdk-openai]。
+  - AI SDK は、モデルを文字列で指定すると既定で Vercel の AI Gateway を経由する[^ai-sdk-openai]。OpenAI に直接送るために、`createOpenAI` で作ったモデルを渡す。
 
 ## データモデル
 
@@ -168,4 +178,5 @@ erDiagram
 [^agents-v060]: [Agents SDK v0.6.0](https://developers.cloudflare.com/changelog/post/2026-02-25-agents-sdk-v0.6.0/)
 [^agents-mcp-2026]: [Agents SDK adds MCP Specification 2026-07-28 support](https://community.cloudflare.com/t/agents-workers-agents-sdk-adds-mcp-specification-2026-07-28-support/943386)
 [^agents-repo]: [cloudflare/agents (GitHub)](https://github.com/cloudflare/agents)
-[^cf-openai-agents]: [Building agents with OpenAI and Cloudflare's Agents SDK](https://blog.cloudflare.com/building-agents-with-openai-and-cloudflares-agents-sdk/)
+[^cf-agents-mcp-client]: [Agents: MCP Client API](https://developers.cloudflare.com/agents/model-context-protocol/apis/client-api/)
+[^ai-sdk-openai]: [AI SDK Providers: OpenAI](https://ai-sdk.dev/providers/ai-sdk-providers/openai)

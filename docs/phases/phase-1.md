@@ -13,6 +13,9 @@ sources:
   - id: openai-deprecations
     resource: https://developers.openai.com/api/docs/deprecations
     title: OpenAI Deprecations
+  - id: openai-gpt-6-luna
+    resource: https://developers.openai.com/api/docs/models/gpt-6-luna
+    title: "OpenAI Models: GPT-6 Luna"
   - id: cf-env-vars
     resource: https://developers.cloudflare.com/workers/configuration/environment-variables/
     title: "Cloudflare Workers: Environment variables"
@@ -75,7 +78,7 @@ flowchart LR
    - 家族グループの groupId もメッセージイベントの `source.groupId` から分かる。
 3. 会話を受け付けるかどうかを判定する（[会話の受け付け判定](#会話の受け付け判定)）。受け付けない会話は破棄する。
 4. 会話の ID（groupId または DM 相手の userId）に対応する ConversationAgent にイベントを渡す。
-5. ConversationAgent から返信内容を受け取ったら、Reply API で送る。
+5. ConversationAgent から返信内容を受け取ったら、Reply API で送る。「返信なし」を受け取ったら何もしない（[生成中に新しいメッセージが届いた場合](#生成中に新しいメッセージが届いた場合)）。
    - Push API は無料で送れる通数に上限があるため、MVP では使わない。**[MVP]**
 
 ## ConversationAgent の処理フロー
@@ -86,6 +89,8 @@ flowchart LR
 2. **受信したメッセージを D1 に保存する**。スタンプは `packageId` / `stickerId` と、Webhook に含まれる場合は `keywords` を保存し、LLM にはキーワードをテキストとして渡す。
 3. 直近 N 件の会話履歴・`FAIRY.md`・人の情報からプロンプトを作る。
 4. LLM に **応答の要否と応答文を 1 回の呼び出しで** 出力させる（Structured Outputs、例: `{ should_reply: boolean, reply: string }`）。判定と生成を別々に呼ぶより呼び出し回数が少なく、コストを抑えられる。
+   - LLM の呼び出しにはタイムアウトを設ける（設定値 `OPENAI_TIMEOUT_SECONDS`、[設定値](#設定値)）。タイムアウトしたら返信せず、エラーをログに残す。
+   - LINE 受け口モジュールが `ctx.waitUntil` で処理を延ばせるのは、レスポンスを返してから最大 30 秒。その中に LLM 以外の処理（Account の解決、保存、Reply API など）も入るので、タイムアウトは 25 秒にして 5 秒の余裕を残す。Cloudflare に打ち切られるとログを残せないため、その前に自分で打ち切る。
 5. `should_reply` が true なら、返信内容を LINE 受け口モジュールに渡して Reply API で送ってもらい、Fairy の発言を D1 に保存する。
 
 ### 生成中に新しいメッセージが届いた場合
@@ -115,6 +120,7 @@ sequenceDiagram
     A->>S: m2 を保存
     S->>D: INSERT
     Note over A: 生成中に新着あり → 進行中の生成を中断して再生成
+    A-->>LM: m1 の呼び出しには「返信なし」
     A->>O: 再生成（履歴: 〜m2）
     O-->>A: 応答（〜m2 ベース）
     A->>LM: 返信内容（m2 の replyToken）
@@ -123,10 +129,15 @@ sequenceDiagram
     S->>D: INSERT
 ```
 
+- 返信は、**再生成のきっかけになった最新のメッセージの呼び出し** が送る。中断された生成を待っていた呼び出し（上の図の m1）は、「返信なし」を受け取って終わる。
+  - こうすると、LINE 受け口モジュールのどの呼び出しも、待つのは 1 回分の生成時間だけになる。`ctx.waitUntil` で処理を延ばせるのはレスポンスを返してから最大 30 秒なので、再生成が続いてもこの時間に収まる。
 - 返信には **最新のメッセージの replyToken** を使う（replyToken はメッセージイベントごとに発行される）。
-- 中断は、進行中の OpenAI へのリクエストを `AbortController` で止めて行う。応答を待ってから捨てるより待ち時間が短い。
-- 再生成の回数には上限を設ける（設定値 `MAX_REGENERATIONS`、[設定値](#設定値)）。上限に達したら、その時点の応答で返信する。
   - 再生成のきっかけは常に新着メッセージなので、返信に使う replyToken は「最後のメッセージを受け取ってから 1 回分の生成時間」しか経っていない。そのため、再生成が続いても replyToken が古くなることはない。
+- 中断は、進行中の OpenAI へのリクエストを `AbortController` で止めて行う。応答を待ってから捨てるより待ち時間が短い。
+- 再生成の回数には上限を設ける（設定値 `MAX_REGENERATIONS`、[設定値](#設定値)）。上限は大きめにし、通常は達しない想定。
+  - 上限に達したあとに届いたメッセージは、進行中の生成を中断しない。保存だけして、その呼び出しは「返信なし」で終わる。
+  - 進行中の生成の返信は、その生成を始めた呼び出しが送る。
+  - 上限に達したときの振る舞いは、実装が単純になることを優先している。上限に達したあとに届いたメッセージは、その返信には反映されない。
 
 ### 応答速度と D1 への保存のタイミング
 
@@ -158,16 +169,17 @@ sequenceDiagram
 
 **モデルを `gpt-6-luna` にする理由**（2026-11-22 時点の OpenAI 公式ページで確認[^openai-pricing][^openai-models][^openai-deprecations]）
 
-| モデル | 入力 / キャッシュ入力 / 出力（1M トークンあたり） | 状態 |
-| --- | --- | --- |
-| `gpt-5-nano` | $0.05 / $0.005 / $0.40 | 2026-12-11 に提供終了。後継は `gpt-6-luna` |
-| **`gpt-6-luna`** | **$0.10 / $0.01 / $0.50** | 現行。OpenAI が「最も効率的なモデル」としている |
-| `gpt-5.6-luna` | $0.20 / $0.02 / $1.20 | 現行 |
-| `gpt-5.4-nano` | $0.20 / $0.02 / $1.25 | 2027-04-01 に提供終了 |
-
 - 単価が最も安い `gpt-5-nano` は数週間後に提供終了するため、現行モデルで最も安い `gpt-6-luna` を選ぶ。
+
+  | モデル | 入力 / キャッシュ入力 / 出力（1M トークンあたり） | 状態 |
+  | --- | --- | --- |
+  | `gpt-5-nano` | $0.05 / $0.005 / $0.40 | 2026-12-11 に提供終了。後継は `gpt-6-luna` |
+  | **`gpt-6-luna`** | **$0.10 / $0.01 / $0.50** | 現行。OpenAI が「最も効率的なモデル」としている |
+  | `gpt-5.6-luna` | $0.20 / $0.02 / $1.20 | 現行 |
+  | `gpt-5.4-nano` | $0.20 / $0.02 / $1.25 | 2027-04-01 に提供終了 |
+
 - 画像入力にも対応しているため、Phase 2（画像の理解）でもモデルを変えずに済む見込み。
-- Structured Outputs に対応しているかは要確認（[実装の最初に確認すること](#実装の最初に確認すること)）。
+- Structured Outputs に対応している（モデルページの Supported features に `structured_outputs` がある）。reasoning effort に `none` も指定できる。[^openai-gpt-6-luna]
 
 **コストの試算**（利用量は仮定）
 
@@ -195,6 +207,7 @@ sequenceDiagram
 | `LINE_FAMILY_GROUP_ID` | 家族グループの groupId。**[MVP]** 受け付けるグループを `conversations` テーブルで管理するようになったら不要になる | secrets | — |
 | `OPENAI_MODEL` | LLM のモデル（[LLM のモデルと会話履歴の件数](#llm-のモデルと会話履歴の件数)） | vars | `gpt-6-luna` **[MVP]** |
 | `OPENAI_REASONING_EFFORT` | reasoning effort（[LLM のモデルと会話履歴の件数](#llm-のモデルと会話履歴の件数)） | vars | `none` **[MVP]** |
+| `OPENAI_TIMEOUT_SECONDS` | LLM の呼び出しのタイムアウト（秒）（[基本の流れ](#基本の流れ)） | vars | `25` |
 | `HISTORY_LIMIT` | プロンプトに入れる会話履歴の件数（[LLM のモデルと会話履歴の件数](#llm-のモデルと会話履歴の件数)） | vars | `30` **[MVP]** |
 | `MAX_REGENERATIONS` | 再生成の回数の上限（[生成中に新しいメッセージが届いた場合](#生成中に新しいメッセージが届いた場合)） | vars | `10` **[MVP]** |
 
@@ -203,14 +216,9 @@ sequenceDiagram
 - [`FAIRY.md`](../../FAIRY.md) はリポジトリで管理し、ビルド時に文字列として Worker に取り込んでシステムプロンプトに使う。
 - `FAIRY.md` 内の HTML コメント（`<!-- ... -->`）は、オーナーが内容の補足（出典・元のセリフなど）を書くためのもの。システムプロンプトに入れる前に取り除く。
 
-## 実装の最初に確認すること
-
-- [ ] `gpt-6-luna` が Structured Outputs に対応しているか（[LLM のモデルと会話履歴の件数](#llm-のモデルと会話履歴の件数)）
-- [ ] Durable Objects を無料プランで使えるか（[Durable Object を使う理由](../design.md#durable-object-を使う理由)）
-- [ ] LLM の呼び出しに使う SDK の組み合わせ（[Agent フレームワーク](../design.md#agent-フレームワークとして-cloudflare-agents-sdk-を最初から最小限使う)）
-
 [^openai-pricing]: [OpenAI API Pricing](https://developers.openai.com/api/docs/pricing)
 [^openai-models]: [OpenAI Models](https://developers.openai.com/api/docs/models)
 [^openai-deprecations]: [OpenAI Deprecations](https://developers.openai.com/api/docs/deprecations)
+[^openai-gpt-6-luna]: [OpenAI Models: GPT-6 Luna](https://developers.openai.com/api/docs/models/gpt-6-luna)
 [^cf-env-vars]: [Cloudflare Workers: Environment variables](https://developers.cloudflare.com/workers/configuration/environment-variables/)
 [^cf-secrets]: [Cloudflare Workers: Secrets](https://developers.cloudflare.com/workers/configuration/secrets/)

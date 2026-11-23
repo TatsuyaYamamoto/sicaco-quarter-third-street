@@ -12,3 +12,4 @@ okf_version: "0.2"
 # Subdirectories
 
 * [phases](phases/index.md) - フェーズごとの詳細設計
+* [comparison](comparison/index.md) - 技術選定などのための比較（決定事項ではない）

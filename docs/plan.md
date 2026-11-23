@@ -32,3 +32,4 @@ status: draft
 - [ ] LINE 以外のプラットフォームで「アカウント」を何で表すか（[概念モデル](design.md#概念モデル)）
 - [ ] 家族グループ以外のグループへの参加の可否と、その管理方法（[会話の受け付け判定](phases/phase-1.md#会話の受け付け判定)）
 - [ ] OpenAI の使用量の監視方法（[LLM のモデルと会話履歴の件数](phases/phase-1.md#llm-のモデルと会話履歴の件数)）
+- [ ] Cloudflare AI Gateway を経由するか。経由したときの動作（構造化出力・reasoning effort の指定が届くか、中断が伝わるか、`gpt-6-luna` を使えるか）を、MVP ができてから実際に呼んで確かめる。使用量の監視に使える可能性もある（[LLM の呼び出し方法の比較](comparison/llm-invocation.md)）
