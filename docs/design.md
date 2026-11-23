@@ -122,7 +122,7 @@ MVP 自体は OpenAI の SDK だけでも作れるが、機能追加（MCP に�
   - そのうち AI SDK は、Agents SDK の MCP クライアント（`getAITools()`）とそのままつながり[^cf-agents-mcp-client]、provider を差し替えれば OpenAI 以外のモデルも同じ書き方で呼べる[^ai-sdk-openai]。
   - Cloudflare AI Gateway は経由しない。**[MVP]** 経由した場合に、strict の構造化出力・reasoning effort の指定が OpenAI まで届くか、中断が伝わるか、`gpt-6-luna` を使えるかが、ドキュメントで確認できないため。MVP ができたら、実際に呼んで確かめたうえで改めて検討する（[後のフェーズで決めること](plan.md#後のフェーズで決めること)）。
   - OpenAI の strict モードの構造化出力では、スキーマに optional なプロパティを使えない（`.nullable()` で表す）[^ai-sdk-openai]。
-  - AI SDK は、モデルを文字列で指定すると既定で Vercel の AI Gateway を経由する[^ai-sdk-openai]。OpenAI に直接送るために、`createOpenAI` で作ったモデルを渡す。
+  - AI SDK は、モデルを文字列で指定すると既定で Vercel の AI Gateway を経由する[^ai-sdk-openai]。Vercel のサービスは使わない（[コンセプト](concept.md#制約) の「クラウドを使うときは Cloudflare の製品を前提にする」）ので、`createOpenAI` で作ったモデルを渡す。
 
 ### 開発ツールとライブラリ
 

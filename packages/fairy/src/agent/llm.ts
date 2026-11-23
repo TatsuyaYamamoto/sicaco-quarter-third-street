@@ -10,21 +10,18 @@ import { z } from "zod";
 import type { Config } from "../config";
 import type { Reply } from "./types";
 
-// OpenAI の strict モードの構造化出力では optional を使えないので、nullable で表す
-const outputSchema = z.object({
-  should_reply: z.boolean().describe("Fairy が返信するべきなら true"),
-  reply: z.string().nullable().describe("返信の文章。返信しないなら null"),
-});
-
 /**
- * OpenAI に直接リクエストするモデルを作る
+ * OpenAI のモデルを作る
  *
  * generateText の model にモデル ID の文字列を渡すと、AI SDK は既定で Vercel の AI Gateway にリクエストを送る。
- * OpenAI に直接送るため、OpenAI の provider でモデルを作る（docs/design.md の「Agent フレームワークとして Cloudflare Agents SDK を最初から最小限使う」）
+ * Vercel のサービスは使わない（クラウドは Cloudflare の製品を前提にしている）ので、OpenAI の provider でモデルを作る
  */
 export const createModel = (
   config: Pick<Config, "OPENAI_API_KEY" | "OPENAI_MODEL">,
-): LanguageModel => createOpenAI({ apiKey: config.OPENAI_API_KEY })(config.OPENAI_MODEL);
+): LanguageModel => {
+  const openai = createOpenAI({ apiKey: config.OPENAI_API_KEY });
+  return openai(config.OPENAI_MODEL);
+};
 
 /** 返信するかどうかと返信の文章を生成する。タイムアウトやエラーのときは返信しない */
 export const generateReply = async ({
@@ -43,7 +40,13 @@ export const generateReply = async ({
       model,
       system,
       prompt,
-      output: Output.object({ schema: outputSchema }),
+      output: Output.object({
+        // OpenAI の strict モードの構造化出力では optional を使えないので、nullable で表す
+        schema: z.object({
+          should_reply: z.boolean().describe("Fairy が返信するべきなら true"),
+          reply: z.string().nullable().describe("返信の文章。返信しないなら null"),
+        }),
+      }),
       providerOptions: {
         openai: {
           reasoningEffort: config.OPENAI_REASONING_EFFORT,
