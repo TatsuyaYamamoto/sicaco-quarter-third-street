@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/d1";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { testSecrets } from "../../test/secrets";
 import { accounts, conversations, messages } from "../db/schema";
-import { resolveRoles } from "./conversation-agent";
+import { resolveRoles } from "./ConversationAgent";
 import { dispatchMessage } from "./dispatch";
 import type { IncomingMessage } from "./types";
 

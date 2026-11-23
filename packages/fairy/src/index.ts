@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { webhookRoutes } from "./routes/webhook";
 
-export { ConversationAgent } from "./agent/conversation-agent";
+export { ConversationAgent } from "./agent/ConversationAgent";
 
 const app = new Hono<{ Bindings: Env }>().route("/webhook", webhookRoutes);
 
