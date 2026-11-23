@@ -16,7 +16,12 @@ const outputSchema = z.object({
   reply: z.string().nullable().describe("返信の文章。返信しないなら null"),
 });
 
-/** 設定値のモデルを作る。モデル名の文字列を渡すと Vercel の AI Gateway を経由するので、OpenAI の provider を使う */
+/**
+ * OpenAI に直接リクエストするモデルを作る
+ *
+ * generateText の model にモデル ID の文字列を渡すと、AI SDK は既定で Vercel の AI Gateway にリクエストを送る。
+ * OpenAI に直接送るため、OpenAI の provider でモデルを作る（docs/design.md の「LLM の呼び出し」）
+ */
 export const createModel = (
   config: Pick<Config, "OPENAI_API_KEY" | "OPENAI_MODEL">,
 ): LanguageModel => createOpenAI({ apiKey: config.OPENAI_API_KEY })(config.OPENAI_MODEL);
