@@ -7,8 +7,7 @@
 import type { messagingApi, webhook } from "@line/bot-sdk";
 import type { IncomingMessage } from "../agent/types";
 import type { Config } from "../config";
-
-const encoder = new TextEncoder();
+import { decodeBase64, verifyHmacSha256 } from "./utils";
 
 /**
  * Webhook の署名（`x-line-signature`）を検証する。署名はリクエストボディの HMAC-SHA256 を Base64 にしたもの
@@ -20,21 +19,8 @@ export const verifySignature = async (
   body: string,
   signature: string,
 ): Promise<boolean> => {
-  let signatureBytes: Uint8Array<ArrayBuffer>;
-  try {
-    signatureBytes = Uint8Array.from(atob(signature), (c) => c.charCodeAt(0));
-  } catch {
-    return false;
-  }
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(channelSecret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["verify"],
-  );
-  // subtle.verify は比較にかかる時間が署名の内容に左右されない
-  return crypto.subtle.verify("HMAC", key, signatureBytes, encoder.encode(body));
+  const signatureBytes = decodeBase64(signature);
+  return signatureBytes !== null && verifyHmacSha256(channelSecret, body, signatureBytes);
 };
 
 /** Fairy が扱うメッセージイベント。テキストかスタンプで、返信に使う replyToken がある */
