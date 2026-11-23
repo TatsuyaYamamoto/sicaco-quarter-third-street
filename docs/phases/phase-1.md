@@ -72,10 +72,12 @@ flowchart LR
 
 ## LINE 受け口モジュールの処理フロー
 
-1. Webhook を受け取って署名 (`x-line-signature`) を検証し、すぐに 200 を返す（以降の処理は `ctx.waitUntil` で行う）。
+1. Webhook を受け取って署名 (`x-line-signature`) を検証し、すぐに 200 を返す（以降の処理は `ctx.waitUntil` で行う）。署名が正しくなければ 401 を返し、何もしない。
 2. メッセージイベント以外（join / memberJoined / leave / memberLeft など）は無視する。**[MVP]**
    - Person / Account は、メッセージを受信したときに「なければ作る」（[基本の流れ](#基本の流れ)の 1）ので、最初に発言した時点で必ず登録される。一度も発言しない人は Fairy にとって識別する必要がない。
    - 家族グループの groupId もメッセージイベントの `source.groupId` から分かる。
+   - メッセージイベントでも、テキストとスタンプ以外（画像・動画・音声・ファイル・位置情報など）は無視する。保存もしない。**[MVP]** 画像は Phase 2 で扱う。
+   - 発言者の userId が含まれないイベントは、発言者を識別できないので無視する。
 3. 会話を受け付けるかどうかを判定する（[会話の受け付け判定](#会話の受け付け判定)）。受け付けない会話は破棄する。
 4. 会話の ID（groupId または DM 相手の userId）に対応する ConversationAgent にイベントを渡す。
 5. ConversationAgent から返信内容を受け取ったら、Reply API で送る。「返信なし」を受け取ったら何もしない（[生成中に新しいメッセージが届いた場合](#生成中に新しいメッセージが届いた場合)）。
@@ -85,7 +87,8 @@ flowchart LR
 
 ### 基本の流れ
 
-1. **送信者の Account / Person を解決する**。D1 になければその場で作成する（表示名はプロフィール API で取得する）。
+1. **送信者の Account / Person を解決する**。D1 になければその場で作成する。
+   - 表示名（`accounts.display_name`）は取得せず、空のままにする。**[MVP]** LINE の表示名が、Fairy にとっての正しい呼び名とは限らないため。呼び名は会話を通じて覚える（`persons.name`）。知らない人の LINE の表示名を Fairy が調べる手段は、後のフェーズで検討する（[後のフェーズで決めること](../plan.md#後のフェーズで決めること)）。
 2. **受信したメッセージを D1 に保存する**。スタンプは `packageId` / `stickerId` と、Webhook に含まれる場合は `keywords` を保存し、LLM にはキーワードをテキストとして渡す。
 3. 直近 N 件の会話履歴・`FAIRY.md`・人の情報からプロンプトを作る。
 4. LLM に **応答の要否と応答文を 1 回の呼び出しで** 出力させる（Structured Outputs、例: `{ should_reply: boolean, reply: string }`）。判定と生成を別々に呼ぶより呼び出し回数が少なく、コストを抑えられる。
@@ -155,7 +158,7 @@ sequenceDiagram
 | 家族グループ（設定値の groupId と一致） | 受け付ける |
 | マスター・助手二号との DM | 受け付ける |
 | それ以外の人との DM | 応答しない。保存もしない |
-| 家族グループ以外のグループ | 退出はせず、応答しない。保存もしない。**[MVP]** 将来は `conversations` テーブルで受け付けるグループを管理できるようにする（管理方法は **[未決]**） |
+| 家族グループ以外のグループ・複数人トーク | 退出はせず、応答しない。保存もしない。**[MVP]** 将来は `conversations` テーブルで受け付けるグループを管理できるようにする（管理方法は **[未決]**） |
 
 ## LLM のモデルと会話履歴の件数
 
@@ -200,7 +203,7 @@ sequenceDiagram
 | キー | 内容 | 種類 | 初期値 |
 | --- | --- | --- | --- |
 | `LINE_CHANNEL_SECRET` | LINE の Channel Secret（署名検証に使う） | secrets | — |
-| `LINE_CHANNEL_ACCESS_TOKEN` | LINE の Channel Access Token（返信・プロフィール取得に使う） | secrets | — |
+| `LINE_CHANNEL_ACCESS_TOKEN` | LINE の Channel Access Token（返信に使う） | secrets | — |
 | `OPENAI_API_KEY` | OpenAI の API Key | secrets | — |
 | `LINE_USER_ID_MASTER` | マスターの LINE userId | secrets | — |
 | `LINE_USER_ID_ASSISTANT2` | 助手二号の LINE userId | secrets | — |
