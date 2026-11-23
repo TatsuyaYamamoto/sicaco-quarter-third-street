@@ -20,7 +20,7 @@ const outputSchema = z.object({
  * OpenAI に直接リクエストするモデルを作る
  *
  * generateText の model にモデル ID の文字列を渡すと、AI SDK は既定で Vercel の AI Gateway にリクエストを送る。
- * OpenAI に直接送るため、OpenAI の provider でモデルを作る（docs/design.md の「LLM の呼び出し」）
+ * OpenAI に直接送るため、OpenAI の provider でモデルを作る（docs/design.md の「Agent フレームワークとして Cloudflare Agents SDK を最初から最小限使う」）
  */
 export const createModel = (
   config: Pick<Config, "OPENAI_API_KEY" | "OPENAI_MODEL">,
