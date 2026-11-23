@@ -1,29 +1,45 @@
 /**
- * @file プラットフォームの受け口と Agent の間でやり取りする型。Agent はプラットフォームに依存しないので、ここにはプラットフォーム固有の情報（LINE の replyToken など）を入れない
+ * @file プラットフォームの受け口と Agent の間でやり取りする型
+ *
+ * Agent はプラットフォームに依存しないので、受け口は入力を Agent 向けに解釈した値（プラットフォームに依存しない部分）にして渡す。
+ * プラットフォームの値をそのまま持つもの（ID や元のイベント）は、Agent は保存や照合にだけ使い、中身は解釈しない。
+ * 返信の送り方に関わる情報（LINE の replyToken など）は、受け口だけが持ち、Agent には渡さない。
  */
 
-/** 会話に投稿された 1 件のメッセージ */
-export type IncomingMessage = {
-  platform: "line";
+/** 会話に投稿された 1 件のメッセージのうち、プラットフォームに依存しない部分 */
+type IncomingMessageBase = {
   conversation: {
-    /** LINE のグループなら groupId、DM なら相手の userId */
-    platformConversationId: string;
     type: "group" | "dm";
   };
-  sender: {
-    platformUserId: string;
-  };
   message: {
-    platformMessageId: string;
     type: "text" | "sticker";
     /** 本文。スタンプはキーワードを入れる（キーワードがなければ null） */
     text: string | null;
-    /** 元のイベント */
-    payloadJson: string;
   };
   /** 送信日時（ISO 8601） */
   sentAt: string;
 };
+
+/** 会話に投稿された 1 件のメッセージのうち、LINE 固有の部分 */
+type LineIncomingMessage = {
+  platform: "line";
+  conversation: {
+    /** グループなら groupId、DM なら相手の userId */
+    platformConversationId: string;
+  };
+  sender: {
+    /** userId */
+    platformUserId: string;
+  };
+  message: {
+    platformMessageId: string;
+    /** 元の Webhook のイベント */
+    payloadJson: string;
+  };
+};
+
+/** 会話に投稿された 1 件のメッセージ。プラットフォームが増えたら、固有の部分を union にする */
+export type IncomingMessage = IncomingMessageBase & LineIncomingMessage;
 
 /** Agent が返す返信の内容 */
 export type Reply =
