@@ -2,29 +2,13 @@ import { env } from "cloudflare:test";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { openaiResponse } from "../../test/openai";
 import { testSecrets } from "../../test/secrets";
 import { conversations, messages } from "../db/schema";
 import { dispatchMessageToAgent } from "./dispatch";
 import type { IncomingMessage } from "./types";
 
 const db = drizzle(env.DB);
-
-/** OpenAI の Responses API のレスポンス。output_text に構造化出力の JSON を入れる */
-const openaiResponse = (output: { should_reply: boolean; reply: string | null }): Response =>
-  Response.json({
-    id: "resp_1",
-    created_at: 0,
-    model: "gpt-6-luna",
-    output: [
-      {
-        type: "message",
-        role: "assistant",
-        id: "msg_1",
-        content: [{ type: "output_text", text: JSON.stringify(output), annotations: [] }],
-      },
-    ],
-    usage: { input_tokens: 1, output_tokens: 1 },
-  });
 
 // テストごとにはストレージが分かれないので、ほかのテストと ID が重ならないようにする
 let seq = 0;

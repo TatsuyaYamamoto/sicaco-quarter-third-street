@@ -16,28 +16,27 @@ import type { Reply } from "./types";
  * generateText の model にモデル ID の文字列を渡すと、AI SDK は既定で Vercel の AI Gateway にリクエストを送る。
  * Vercel のサービスは使わない（クラウドは Cloudflare の製品を前提にしている）ので、OpenAI の provider でモデルを作る
  */
-export const createModel = (
-  config: Pick<Config, "OPENAI_API_KEY" | "OPENAI_MODEL">,
-): LanguageModel => {
+const createModel = (config: Pick<Config, "OPENAI_API_KEY" | "OPENAI_MODEL">): LanguageModel => {
   const openai = createOpenAI({ apiKey: config.OPENAI_API_KEY });
   return openai(config.OPENAI_MODEL);
 };
 
 /** 返信するかどうかと返信の文章を生成する。タイムアウトやエラーのときは返信しない */
 export const generateReply = async ({
-  model,
   system,
   prompt,
   config,
 }: {
-  model: LanguageModel;
   system: string;
   prompt: string;
-  config: Pick<Config, "OPENAI_REASONING_EFFORT" | "OPENAI_TIMEOUT_SECONDS">;
+  config: Pick<
+    Config,
+    "OPENAI_API_KEY" | "OPENAI_MODEL" | "OPENAI_REASONING_EFFORT" | "OPENAI_TIMEOUT_SECONDS"
+  >;
 }): Promise<Reply | undefined> => {
   try {
     const { output } = await generateText({
-      model,
+      model: createModel(config),
       system,
       prompt,
       output: Output.object({

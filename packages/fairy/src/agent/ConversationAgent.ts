@@ -16,7 +16,7 @@ import {
   saveMessage,
 } from "../db/storage";
 import { type Role, roleIdentifiedBy } from "../models/person";
-import { createModel, generateReply } from "./llm";
+import { generateReply } from "./llm";
 import { buildConversationPrompt, buildSystemPrompt } from "./prompt";
 import type { IncomingMessage, Reply } from "./types";
 
@@ -80,7 +80,6 @@ export class ConversationAgent extends Agent<Cloudflare.Env> {
     }
 
     const reply = await generateReply({
-      model: createModel(config),
       system: systemPrompt,
       prompt: buildConversationPrompt({
         platform: message.platform,
