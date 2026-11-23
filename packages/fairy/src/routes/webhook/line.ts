@@ -21,7 +21,7 @@ type Dependencies = {
   /** 受け付けたメッセージを Agent に渡す */
   dispatch: DispatchMessage;
   /** テストで差し替えるためのもの。省略すると Channel Access Token でクライアントを作る */
-  createClient?: (channelAccessToken: string) => Pick<LineClient, "reply">;
+  createClient?: (channelAccessToken: string) => LineClient;
 };
 
 export const createLineWebhook = ({ dispatch, createClient = createLineClient }: Dependencies) =>

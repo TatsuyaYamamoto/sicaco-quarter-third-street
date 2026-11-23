@@ -17,7 +17,10 @@ export const testConfig = {
 export const testEnv = { ...env, ...testConfig } satisfies Env;
 
 /** Webhook の署名を作る */
-export const sign = async (body: string, secret = testConfig.LINE_CHANNEL_SECRET) => {
+export const sign = async (
+  body: string,
+  secret = testConfig.LINE_CHANNEL_SECRET,
+): Promise<string> => {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",

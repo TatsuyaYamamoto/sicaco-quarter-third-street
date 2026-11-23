@@ -86,9 +86,12 @@ export const isAcceptedConversation = (
 
 const API_BASE_URL = "https://api.line.me/v2/bot";
 
-export type LineClient = ReturnType<typeof createLineClient>;
+export type LineClient = {
+  /** Reply API でテキストを送る */
+  reply: (replyToken: string, text: string) => Promise<void>;
+};
 
-export const createLineClient = (channelAccessToken: string) => {
+export const createLineClient = (channelAccessToken: string): LineClient => {
   const request = async (path: string, init?: RequestInit): Promise<Response> => {
     const res = await fetch(`${API_BASE_URL}${path}`, {
       ...init,
@@ -104,8 +107,7 @@ export const createLineClient = (channelAccessToken: string) => {
   };
 
   return {
-    /** Reply API でテキストを送る */
-    reply: async (replyToken: string, text: string): Promise<void> => {
+    reply: async (replyToken, text) => {
       await request("/message/reply", {
         method: "POST",
         body: JSON.stringify({
