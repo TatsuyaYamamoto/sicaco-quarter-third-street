@@ -25,5 +25,9 @@ export type IncomingMessage = {
   sentAt: string;
 };
 
-/** Agent が返す返信の内容。null は「返信なし」 */
-export type Reply = { text: string } | null;
+/** Agent が返す返信の内容 */
+export type Reply =
+  /** テキストで返信する */
+  | { type: "text"; text: string }
+  /** 返信しない */
+  | { type: "none" };

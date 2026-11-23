@@ -18,7 +18,7 @@ describe("POST /webhook/line", () => {
   let fetchMock: ReturnType<typeof vi.spyOn<typeof globalThis, "fetch">>;
 
   beforeEach(() => {
-    dispatch.mockResolvedValue({ text: "はい" });
+    dispatch.mockResolvedValue({ type: "text", text: "はい" });
     fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json({}));
   });
 
@@ -61,7 +61,7 @@ describe("POST /webhook/line", () => {
   });
 
   it("Agent が「返信なし」を返したら送らない", async () => {
-    dispatch.mockResolvedValue(null);
+    dispatch.mockResolvedValue({ type: "none" });
     await post([textEvent({ type: "user", userId: "Umaster" })]);
     expect(sentReplies()).toEqual([]);
   });
