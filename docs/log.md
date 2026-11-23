@@ -2,6 +2,7 @@
 
 ## 2026-11-23
 
+* **Update**: [全体設計](design.md) に「開発ツールとライブラリ」の節を追加した。pnpm、oxc（oxlint / oxfmt）、Vitest + `@cloudflare/vitest-pool-workers`、Hono、Drizzle ORM を使い、LINE Messaging API の呼び出しは自前で実装する。Phase 1 の実装を始めるにあたって決めた。
 * **Update**: [全体設計](design.md) から「`ConversationAgent` は SQLite-backed の Durable Object で作る」という記述を削除した。新しく作れる Durable Object は SQLite-backed だけで、設計として選ぶものではないため。
 * **Update**: [Phase 1 の詳細設計](phases/phase-1.md) の「生成中に新しいメッセージが届いた場合」で、返信を送る呼び出しを決めた。返信は再生成のきっかけになった最新のメッセージの呼び出しが送り、中断された生成を待っていた呼び出しは「返信なし」で終わる。どの呼び出しも待つのを 1 回分の生成時間にとどめ、`ctx.waitUntil` の時間制限（最大 30 秒）に収めるため。再生成の上限に達したあとの振る舞いは、実装が単純になるものにした。
 * **Update**: [Phase 1 の詳細設計](phases/phase-1.md) に、LLM の呼び出しのタイムアウト（設定値 `OPENAI_TIMEOUT_SECONDS`、初期値 25 秒）を追加した。`ctx.waitUntil` の時間制限（最大 30 秒）の中に LLM 以外の処理も入るため、5 秒の余裕を残す。

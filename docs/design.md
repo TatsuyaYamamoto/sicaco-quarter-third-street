@@ -114,6 +114,17 @@ MVP 自体は OpenAI の SDK だけでも作れるが、機能追加（MCP に�
   - OpenAI の strict モードの構造化出力では、スキーマに optional なプロパティを使えない（`.nullable()` で表す）[^ai-sdk-openai]。
   - AI SDK は、モデルを文字列で指定すると既定で Vercel の AI Gateway を経由する[^ai-sdk-openai]。OpenAI に直接送るために、`createOpenAI` で作ったモデルを渡す。
 
+### 開発ツールとライブラリ
+
+| 用途 | 使うもの |
+| --- | --- |
+| パッケージマネージャー | pnpm |
+| lint / format | oxc（oxlint / oxfmt） |
+| テスト | Vitest + `@cloudflare/vitest-pool-workers`（Workers のランタイム上で、D1・Durable Object を含めてテストする） |
+| HTTP のルーティング | Hono |
+| LINE Messaging API の呼び出し | 自前で `fetch` を使って実装する（署名検証・Reply API・プロフィール取得）。ライブラリは使わない |
+| D1 へのアクセス | Drizzle ORM（マイグレーションは drizzle-kit で生成し、wrangler で適用する） |
+
 ## データモデル
 
 D1 に保存する。
