@@ -265,3 +265,7 @@ dist
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij+all,node,macos
 
+
+### Cloudflare ###
+.wrangler
+.dev.vars

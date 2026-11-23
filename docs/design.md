@@ -118,9 +118,11 @@ MVP 自体は OpenAI の SDK だけでも作れるが、機能追加（MCP に�
 
 | 用途 | 使うもの |
 | --- | --- |
-| パッケージマネージャー | pnpm |
+| リポジトリの構成 | pnpm workspace の monorepo。Worker `fairy` は `packages/fairy` に置く |
+| パッケージマネージャー | pnpm（依存のバージョンはすべて固定する） |
 | lint / format | oxc（oxlint / oxfmt） |
-| テスト | Vitest + `@cloudflare/vitest-pool-workers`（Workers のランタイム上で、D1・Durable Object を含めてテストする） |
+| TypeScript の設定 | ルートの tsconfig で `@tsconfig/strictest` を継承し、各パッケージの tsconfig はルートの tsconfig を継承する。TypeScript もルートで管理する |
+| テスト | Vitest + `@cloudflare/vitest-plugin`（Workers のランタイム上で、D1・Durable Object を含めてテストする） |
 | HTTP のルーティング | Hono |
 | LINE Messaging API の呼び出し | 自前で `fetch` を使って実装する（署名検証・Reply API・プロフィール取得）。ライブラリは使わない |
 | D1 へのアクセス | Drizzle ORM（マイグレーションは drizzle-kit で生成し、wrangler で適用する） |
@@ -164,7 +166,7 @@ erDiagram
 | --- | --- | --- |
 | `id` | TEXT (PK) | Fairy の内部で使う会話の ID |
 | `platform` | TEXT | `line` など |
-| `platform_conversation_id` | TEXT | プラットフォーム側の会話の ID。LINE のグループなら `groupId`、DM なら相手の `userId` |
+| `platform_conversation_id` | TEXT | プラットフォーム側の会話の ID。LINE のグループなら `groupId`、DM なら相手の `userId`。`(platform, platform_conversation_id)` で一意 |
 | `type` | TEXT | `group` / `dm` |
 | `label` | TEXT NULL | `family` など、会話の場の用途 |
 | `created_at` | TEXT | 作成日時 |
@@ -179,7 +181,7 @@ erDiagram
 | `type` | TEXT | `text` / `sticker` など |
 | `text` | TEXT NULL | 本文。スタンプはキーワードを入れる |
 | `payload_json` | TEXT | 元のイベント（将来の再解析に使う） |
-| `platform_message_id` | TEXT NULL | プラットフォーム側のメッセージ ID（重複受信の検知に使う） |
+| `platform_message_id` | TEXT NULL | プラットフォーム側のメッセージ ID（重複受信の検知に使う）。`(conversation_id, platform_message_id)` で一意 |
 | `created_at` | TEXT | 送信日時 |
 
 [^agent-class]: [Agent class internals](https://developers.cloudflare.com/agents/concepts/agent-class/)
