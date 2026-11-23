@@ -8,10 +8,14 @@ import type { webhook } from "@line/bot-sdk";
 import { Hono } from "hono";
 import type { DispatchMessage } from "../../agent/types";
 import { loadConfig } from "../../config";
-import { isAcceptedConversation } from "../../line/acceptance";
-import { createLineClient, type LineClient } from "../../line/client";
-import { isLineMessageEvent, toIncomingMessage } from "../../line/event";
-import { verifySignature } from "../../line/signature";
+import {
+  createLineClient,
+  isAcceptedConversation,
+  isLineMessageEvent,
+  type LineClient,
+  toIncomingMessage,
+  verifySignature,
+} from "../../helpers/line";
 
 type Dependencies = {
   /** 受け付けたメッセージを Agent に渡す */
