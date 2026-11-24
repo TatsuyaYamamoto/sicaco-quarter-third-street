@@ -21,11 +21,15 @@ export type Account = typeof accounts.$inferSelect;
  */
 export type Role = "master" | "assistant2";
 
-type RoleConfig = Pick<Config, "LINE_USER_ID_MASTER" | "LINE_USER_ID_ASSISTANT2">;
+/** 役割を持つ Person を識別するための設定値 */
+interface RoleConfig {
+  LINE_USER_ID_MASTER: Config["LINE_USER_ID_MASTER"];
+  LINE_USER_ID_ASSISTANT2: Config["LINE_USER_ID_ASSISTANT2"];
+}
 
 /** Account から、その Account を持つ Person の役割を引く。設定値の Account でなければ null */
 export const roleIdentifiedBy = (
-  account: Pick<Account, "platform" | "platformUserId">,
+  account: { platform: Account["platform"]; platformUserId: Account["platformUserId"] },
   config: RoleConfig,
 ): Role | null => {
   if (account.platform === "line" && account.platformUserId === config.LINE_USER_ID_MASTER) {

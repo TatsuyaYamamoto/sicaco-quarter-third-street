@@ -10,13 +10,21 @@ import { z } from "zod";
 import type { Config } from "../config";
 import type { Reply } from "./types";
 
+/** LLM の呼び出しに使う設定値 */
+interface OpenAIConfig {
+  OPENAI_API_KEY: Config["OPENAI_API_KEY"];
+  OPENAI_MODEL: Config["OPENAI_MODEL"];
+  OPENAI_REASONING_EFFORT: Config["OPENAI_REASONING_EFFORT"];
+  OPENAI_TIMEOUT_SECONDS: Config["OPENAI_TIMEOUT_SECONDS"];
+}
+
 /**
  * OpenAI のモデルを作る
  *
  * generateText の model にモデル ID の文字列を渡すと、AI SDK は既定で Vercel の AI Gateway にリクエストを送る。
  * Vercel のサービスは使わない（クラウドは Cloudflare の製品を前提にしている）ので、OpenAI の provider でモデルを作る
  */
-const createModel = (config: Pick<Config, "OPENAI_API_KEY" | "OPENAI_MODEL">): LanguageModel => {
+const createModel = (config: OpenAIConfig): LanguageModel => {
   const openai = createOpenAI({ apiKey: config.OPENAI_API_KEY });
   return openai(config.OPENAI_MODEL);
 };
@@ -29,10 +37,7 @@ export const generateReply = async ({
 }: {
   system: string;
   prompt: string;
-  config: Pick<
-    Config,
-    "OPENAI_API_KEY" | "OPENAI_MODEL" | "OPENAI_REASONING_EFFORT" | "OPENAI_TIMEOUT_SECONDS"
-  >;
+  config: OpenAIConfig;
 }): Promise<Reply | undefined> => {
   try {
     const { output } = await generateText({

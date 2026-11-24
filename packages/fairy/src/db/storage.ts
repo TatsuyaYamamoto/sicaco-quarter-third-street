@@ -97,6 +97,17 @@ export const resolveConversation = async (
   return conversation;
 };
 
+/** 保存するメッセージ。ID は保存するときに振る */
+export interface NewMessage {
+  conversationId: Message["conversationId"];
+  accountId: Message["accountId"];
+  type: Message["type"];
+  text: Message["text"];
+  payloadJson: Message["payloadJson"];
+  platformMessageId: Message["platformMessageId"];
+  createdAt: Message["createdAt"];
+}
+
 /**
  * {@link saveMessage} の結果
  *
@@ -109,10 +120,7 @@ export type SaveMessageResult = "saved" | "alreadySaved";
  * メッセージを保存する。同じ会話で同じ platformMessageId のメッセージがすでにあれば保存しない
  * （LINE が Webhook を再送したときなどに、同じメッセージを二重に処理しないため）
  */
-export const saveMessage = async (
-  db: Db,
-  message: Omit<typeof messages.$inferInsert, "id">,
-): Promise<SaveMessageResult> => {
+export const saveMessage = async (db: Db, message: NewMessage): Promise<SaveMessageResult> => {
   const inserted = await db
     .insert(messages)
     .values({ id: crypto.randomUUID(), ...message })
