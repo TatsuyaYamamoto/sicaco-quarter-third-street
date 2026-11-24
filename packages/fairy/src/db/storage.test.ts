@@ -20,8 +20,8 @@ const unique = (prefix: string): string => `${prefix}-storage-${++seq}`;
 describe("resolveAccount", () => {
   it("なければ Person と一緒に作り、あればそれを返す", async () => {
     const platformUserId = unique("U");
-    const created = await resolveAccount(db, { platform: "line", platformUserId }, now);
-    const found = await resolveAccount(db, { platform: "line", platformUserId }, now);
+    const created = await resolveAccount({ platform: "line", platformUserId }, db);
+    const found = await resolveAccount({ platform: "line", platformUserId }, db);
 
     expect(found).toEqual(created);
     expect(created).toMatchObject({ platformUserId, linkedBy: "auto" });
@@ -33,33 +33,31 @@ describe("resolveAccount", () => {
 describe("resolveConversation", () => {
   it("同じ会話なら同じものを返す", async () => {
     const key = { platform: "line", platformConversationId: unique("C"), type: "group" } as const;
-    const first = await resolveConversation(db, key, now);
-    expect(await resolveConversation(db, key, now)).toEqual(first);
+    const first = await resolveConversation(key, db);
+    expect(await resolveConversation(key, db)).toEqual(first);
   });
 });
 
 describe("saveMessage / getRecentMessageHistory", () => {
   const setup = async () => {
-    const account = await resolveAccount(
-      db,
-      { platform: "line", platformUserId: unique("U") },
-      now,
-    );
+    const account = await resolveAccount({ platform: "line", platformUserId: unique("U") }, db);
     const conversation = await resolveConversation(
-      db,
       { platform: "line", platformConversationId: unique("C"), type: "group" },
-      now,
+      db,
     );
     const save = (text: string, createdAt: string, accountId: string | null = account.id) =>
-      saveMessage(db, {
-        conversationId: conversation.id,
-        accountId,
-        type: "text",
-        text,
-        payloadJson: "{}",
-        platformMessageId: accountId ? text : null,
-        createdAt,
-      });
+      saveMessage(
+        {
+          conversationId: conversation.id,
+          accountId,
+          type: "text",
+          text,
+          payloadJson: "{}",
+          platformMessageId: accountId ? text : null,
+          createdAt,
+        },
+        db,
+      );
     return { account, conversation, save };
   };
 
@@ -75,7 +73,10 @@ describe("saveMessage / getRecentMessageHistory", () => {
     await save("m2", "2026-11-24T00:00:02.000Z");
     await save("fairy", "2026-11-24T00:00:03.000Z", null);
 
-    const messageHistory = await getRecentMessageHistory(db, conversation.id, 2);
+    const messageHistory = await getRecentMessageHistory(
+      { conversationId: conversation.id, limit: 2 },
+      db,
+    );
     expect(messageHistory).toEqual([
       {
         personId: account.personId,
@@ -90,12 +91,8 @@ describe("saveMessage / getRecentMessageHistory", () => {
 
 describe("getAccountsByPerson", () => {
   it("Person ごとに Account をまとめる", async () => {
-    const account = await resolveAccount(
-      db,
-      { platform: "line", platformUserId: unique("U") },
-      now,
-    );
-    const result = await getAccountsByPerson(db, [account.personId]);
+    const account = await resolveAccount({ platform: "line", platformUserId: unique("U") }, db);
+    const result = await getAccountsByPerson({ personIds: [account.personId] }, db);
     expect(result.get(account.personId)).toEqual([account]);
   });
 });

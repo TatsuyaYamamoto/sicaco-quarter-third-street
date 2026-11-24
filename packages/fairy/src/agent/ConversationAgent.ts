@@ -27,47 +27,50 @@ export class ConversationAgent extends Agent<Cloudflare.Env> {
   async handleMessage(message: IncomingMessage): Promise<Reply | undefined> {
     const config = loadConfig(this.env);
     const db = drizzle(this.env.DB);
-    const now = new Date().toISOString();
 
     const [account, conversation] = await Promise.all([
       resolveAccount(
-        db,
         { platform: message.platform, platformUserId: message.sender.platformUserId },
-        now,
+        db,
       ),
       resolveConversation(
-        db,
         {
           platform: message.platform,
           platformConversationId: message.conversation.platformConversationId,
           type: message.conversation.type,
         },
-        now,
+        db,
       ),
     ]);
 
-    const savedMessage = await saveMessage(db, {
-      conversationId: conversation.id,
-      accountId: account.id,
-      type: message.message.type,
-      text:
-        message.message.type === "text"
-          ? message.message.text
-          : message.message.keywords.join(", ") || null,
-      payloadJson: message.message.payloadJson,
-      platformMessageId: message.message.platformMessageId,
-      createdAt: message.sentAt,
-    });
+    const savedMessage = await saveMessage(
+      {
+        conversationId: conversation.id,
+        accountId: account.id,
+        type: message.message.type,
+        text:
+          message.message.type === "text"
+            ? message.message.text
+            : message.message.keywords.join(", ") || null,
+        payloadJson: message.message.payloadJson,
+        platformMessageId: message.message.platformMessageId,
+        createdAt: message.sentAt,
+      },
+      db,
+    );
     if (!savedMessage) {
       // すでに受け取ったメッセージ（Webhook の再送など）なので、二重に返信しない
       return undefined;
     }
 
-    const messageHistory = await getRecentMessageHistory(db, conversation.id, config.HISTORY_LIMIT);
+    const messageHistory = await getRecentMessageHistory(
+      { conversationId: conversation.id, limit: config.HISTORY_LIMIT },
+      db,
+    );
     const personIds = [
       ...new Set(messageHistory.flatMap(({ personId }) => (personId === null ? [] : [personId]))),
     ];
-    const accountsByPerson = await getAccountsByPerson(db, personIds);
+    const accountsByPerson = await getAccountsByPerson({ personIds }, db);
     const roles = new Map<string, Role>();
     for (const personId of personIds) {
       // Person の Account のどれかが役割を持つ Person を示していれば、その Person はその役割を持つ
@@ -93,15 +96,18 @@ export class ConversationAgent extends Agent<Cloudflare.Env> {
     if (reply) {
       // 返信の内容を返すのと並行して保存する（docs/phases/phase-1.md の「応答速度と D1 への保存のタイミング」）
       this.ctx.waitUntil(
-        saveMessage(db, {
-          conversationId: conversation.id,
-          accountId: null,
-          type: "text",
-          text: reply.text,
-          payloadJson: JSON.stringify(reply),
-          platformMessageId: null,
-          createdAt: new Date().toISOString(),
-        }).catch((error: unknown) => console.error("failed to save Fairy's message", error)),
+        saveMessage(
+          {
+            conversationId: conversation.id,
+            accountId: null,
+            type: "text",
+            text: reply.text,
+            payloadJson: JSON.stringify(reply),
+            platformMessageId: null,
+            createdAt: new Date().toISOString(),
+          },
+          db,
+        ).catch((error: unknown) => console.error("failed to save Fairy's message", error)),
       );
     }
     return reply;

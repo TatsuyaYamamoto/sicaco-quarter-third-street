@@ -6,7 +6,7 @@
 
 import { and, desc, eq, inArray } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
-import type { Account } from "../models/person";
+import type { Account, Person } from "../models/person";
 import { accounts, conversations, messages, persons } from "./schema";
 
 export type Db = DrizzleD1Database;
@@ -23,9 +23,8 @@ type Conversation = typeof conversations.$inferSelect;
  * そのときは先に作られた Account を使い、使わなかった Person は消す
  */
 export const resolveAccount = async (
+  { platform, platformUserId }: { platform: Platform; platformUserId: Account["platformUserId"] },
   db: Db,
-  { platform, platformUserId }: { platform: Platform; platformUserId: string },
-  now: string,
 ): Promise<Account> => {
   const where = and(eq(accounts.platform, platform), eq(accounts.platformUserId, platformUserId));
   const existing = await db.select().from(accounts).where(where).get();
@@ -34,6 +33,7 @@ export const resolveAccount = async (
   }
 
   const personId = crypto.randomUUID();
+  const now = new Date().toISOString();
   await db.batch([
     db.insert(persons).values({ id: personId, createdAt: now, updatedAt: now }),
     db
@@ -60,17 +60,27 @@ export const resolveAccount = async (
 
 /** 会話の場を取得する。なければ作る */
 export const resolveConversation = async (
-  db: Db,
   {
     platform,
     platformConversationId,
     type,
-  }: { platform: Platform; platformConversationId: string; type: "group" | "dm" },
-  now: string,
+  }: {
+    platform: Platform;
+    platformConversationId: Conversation["platformConversationId"];
+    /** 会話の場を作るときに使う */
+    type: Conversation["type"];
+  },
+  db: Db,
 ): Promise<Conversation> => {
   await db
     .insert(conversations)
-    .values({ id: crypto.randomUUID(), platform, platformConversationId, type, createdAt: now })
+    .values({
+      id: crypto.randomUUID(),
+      platform,
+      platformConversationId,
+      type,
+      createdAt: new Date().toISOString(),
+    })
     .onConflictDoNothing();
   const conversation = await db
     .select()
@@ -93,11 +103,11 @@ export const resolveConversation = async (
  * （LINE が Webhook を再送したときなどに、同じメッセージを二重に処理しないため）
  */
 export const saveMessage = async (
-  db: Db,
   message: Omit<
     Message,
     "id" // id は自動採番するので、外部からは指定しない
   >,
+  db: Db,
 ): Promise<Message | undefined> => {
   const [inserted] = await db
     .insert(messages)
@@ -118,9 +128,8 @@ export type MessageHistory = {
 
 /** 直近の会話の履歴を、古い順に取得する */
 export const getRecentMessageHistory = async (
+  { conversationId, limit }: { conversationId: Message["conversationId"]; limit: number },
   db: Db,
-  conversationId: string,
-  limit: number,
 ): Promise<MessageHistory> => {
   const rows = await db
     .select({
@@ -139,8 +148,8 @@ export const getRecentMessageHistory = async (
 
 /** Person ごとに、紐付く Account を取得する */
 export const getAccountsByPerson = async (
+  { personIds }: { personIds: Person["id"][] },
   db: Db,
-  personIds: string[],
 ): Promise<Map<string, Account[]>> => {
   const result = new Map<string, Account[]>();
   if (personIds.length === 0) {
