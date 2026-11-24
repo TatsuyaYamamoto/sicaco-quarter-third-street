@@ -15,7 +15,7 @@ describe("buildConversationPrompt", () => {
     const prompt = buildConversationPrompt({
       platform: "line",
       conversationType: "group",
-      history: [
+      messageHistory: [
         { personId: "p-master", type: "text", text: "おはよう", createdAt: "" },
         { personId: "p-unknown", type: "sticker", text: "OK, 了解", createdAt: "" },
         { personId: null, type: "text", text: "肯定。", createdAt: "" },

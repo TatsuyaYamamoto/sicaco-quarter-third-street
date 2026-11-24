@@ -75,8 +75,8 @@ describe("saveMessage / getRecentMessageHistory", () => {
     await save("m2", "2026-11-24T00:00:02.000Z");
     await save("fairy", "2026-11-24T00:00:03.000Z", null);
 
-    const history = await getRecentMessageHistory(db, conversation.id, 2);
-    expect(history).toEqual([
+    const messageHistory = await getRecentMessageHistory(db, conversation.id, 2);
+    expect(messageHistory).toEqual([
       {
         personId: account.personId,
         type: "text",

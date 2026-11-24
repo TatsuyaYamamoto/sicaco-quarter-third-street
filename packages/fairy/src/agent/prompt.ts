@@ -41,18 +41,18 @@ export const buildSystemPrompt = (fairyMd: string): string => {
 export const buildConversationPrompt = ({
   platform,
   conversationType,
-  history,
+  messageHistory,
   roles,
 }: {
   platform: IncomingMessage["platform"];
   conversationType: IncomingMessage["conversation"]["type"];
-  history: MessageHistory;
+  messageHistory: MessageHistory;
   /** Person の ID ごとの役割。役割のない人は含めない */
   roles: Map<string, Role>;
 }): string => {
   // 発言者の ID は、履歴に初めて出てきた順に振る
   const aliases = new Map<string, string>();
-  for (const { personId } of history) {
+  for (const { personId } of messageHistory) {
     if (personId !== null && !aliases.has(personId)) {
       aliases.set(personId, `P${aliases.size + 1}`);
     }
@@ -63,7 +63,7 @@ export const buildConversationPrompt = ({
     return `- ${alias}: ${role ? ROLE_LABELS[role] : "Fairy がまだ知らない人"}`;
   });
 
-  const lines = history.map(({ personId, type, text }) => {
+  const lines = messageHistory.map(({ personId, type, text }) => {
     const speaker = personId === null ? "Fairy" : aliases.get(personId);
     const body = type === "text" ? (text ?? "") : text ? `（スタンプ: ${text}）` : "（スタンプ）";
     return `[${speaker}] ${body}`;

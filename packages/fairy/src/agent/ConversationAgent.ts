@@ -63,9 +63,9 @@ export class ConversationAgent extends Agent<Cloudflare.Env> {
       return undefined;
     }
 
-    const history = await getRecentMessageHistory(db, conversation.id, config.HISTORY_LIMIT);
+    const messageHistory = await getRecentMessageHistory(db, conversation.id, config.HISTORY_LIMIT);
     const personIds = [
-      ...new Set(history.flatMap(({ personId }) => (personId === null ? [] : [personId]))),
+      ...new Set(messageHistory.flatMap(({ personId }) => (personId === null ? [] : [personId]))),
     ];
     const accountsByPerson = await getAccountsByPerson(db, personIds);
     const roles = new Map<string, Role>();
@@ -84,7 +84,7 @@ export class ConversationAgent extends Agent<Cloudflare.Env> {
       prompt: buildConversationPrompt({
         platform: message.platform,
         conversationType: message.conversation.type,
-        history,
+        messageHistory,
         roles,
       }),
       config,
