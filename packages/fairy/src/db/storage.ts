@@ -109,24 +109,16 @@ export interface NewMessage {
 }
 
 /**
- * {@link saveMessage} の結果
- *
- * - `saved`: 保存した
- * - `alreadySaved`: 同じメッセージがすでに保存されていたので、保存しなかった
- */
-export type SaveMessageResult = "saved" | "alreadySaved";
-
-/**
- * メッセージを保存する。同じ会話で同じ platformMessageId のメッセージがすでにあれば保存しない
+ * メッセージを保存し、保存したメッセージを返す。同じ会話で同じ platformMessageId のメッセージがすでにあれば、保存せずに undefined を返す
  * （LINE が Webhook を再送したときなどに、同じメッセージを二重に処理しないため）
  */
-export const saveMessage = async (db: Db, message: NewMessage): Promise<SaveMessageResult> => {
-  const inserted = await db
+export const saveMessage = async (db: Db, message: NewMessage): Promise<Message | undefined> => {
+  const [inserted] = await db
     .insert(messages)
     .values({ id: crypto.randomUUID(), ...message })
     .onConflictDoNothing()
-    .returning({ id: messages.id });
-  return inserted.length > 0 ? "saved" : "alreadySaved";
+    .returning();
+  return inserted;
 };
 
 /** 直近の会話の履歴を、古い順に取得する */
