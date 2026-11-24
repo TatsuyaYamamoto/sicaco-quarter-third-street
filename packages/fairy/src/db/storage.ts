@@ -13,11 +13,17 @@ export type Db = DrizzleD1Database;
 
 type Platform = Account["platform"];
 
+type Message = typeof messages.$inferSelect;
+type Conversation = typeof conversations.$inferSelect;
+
 /** 会話の履歴の 1 件。発言者は、Account ではなく Person で表す */
-export type HistoryMessage = Pick<typeof messages.$inferSelect, "type" | "text" | "createdAt"> & {
+export interface HistoryMessage {
   /** 発言者の Person の ID。Fairy 自身の発言は null */
   personId: Account["personId"] | null;
-};
+  type: Message["type"];
+  text: Message["text"];
+  createdAt: Message["createdAt"];
+}
 
 /**
  * Account を取得する。なければ Person と一緒に作る
@@ -70,7 +76,7 @@ export const resolveConversation = async (
     type,
   }: { platform: Platform; platformConversationId: string; type: "group" | "dm" },
   now: string,
-): Promise<typeof conversations.$inferSelect> => {
+): Promise<Conversation> => {
   await db
     .insert(conversations)
     .values({ id: crypto.randomUUID(), platform, platformConversationId, type, createdAt: now })
