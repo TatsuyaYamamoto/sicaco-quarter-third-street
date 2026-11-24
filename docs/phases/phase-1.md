@@ -45,7 +45,8 @@ flowchart LR
     LINE[LINE Platform]
     subgraph CF[Cloudflare]
         subgraph W[Worker: fairy]
-            LM[LINE 受け口モジュール<br/>署名検証・イベント変換・返信送信]
+            LM[LINE 受け口モジュール<br/>署名検証・受け付け判定・イベント変換・返信送信]
+            RS[解決モジュール<br/>Account・Person・会話の場の解決<br/>メッセージの保存]
             AG[Agent モジュール<br/>ConversationAgent<br/>Durable Object・会話ごとに 1 インスタンス]
             ST[ストレージモジュール<br/>D1 へのアクセス]
         end
@@ -54,8 +55,10 @@ flowchart LR
     OAI[OpenAI API]
 
     LINE -- Webhook --> LM
-    LM -- 会話ごとに振り分け --> AG
-    AG -- 保存・履歴の取得 --> ST
+    LM -- PlatformMessage --> RS
+    RS -- 解決・保存 --> ST
+    RS -- ResolvedMessage<br/>会話ごとに振り分け --> AG
+    AG -- 履歴の取得・Fairy の発言の保存 --> ST
     ST --> D1
     AG -- 応答の判定と生成 --> OAI
     AG -- 返信内容 --> LM
@@ -66,6 +69,7 @@ flowchart LR
 | --- | --- |
 | Worker (`fairy`) | デプロイ単位。以下のモジュールを含む |
 | └ LINE 受け口モジュール | LINE とのやり取り（[LINE 受け口モジュールの処理フロー](#line-受け口モジュールの処理フロー)） |
+| └ 解決モジュール | 受け口から受け取ったメッセージの Account・Person・会話の場を解決し、保存して、ConversationAgent に渡す。Agent への入り口の関数の中で、Worker で動く（[解決モジュールの処理フロー](#解決モジュールの処理フロー)） |
 | └ Agent モジュール (`ConversationAgent`) | Agents SDK の Agent クラス（Durable Object）。会話（グループや DM）ごとに 1 インスタンス（[ConversationAgent の処理フロー](#conversationagent-の処理フロー)） |
 | └ ストレージモジュール | D1 への読み書きをまとめる |
 | D1 | Person / Account / 会話 / メッセージを保存する（[データモデル](../design.md#データモデル)） |
@@ -74,27 +78,60 @@ flowchart LR
 
 1. Webhook を受け取って署名 (`x-line-signature`) を検証し、すぐに 200 を返す（以降の処理は `ctx.waitUntil` で行う）。署名が正しくなければ 401 を返し、何もしない。
 2. メッセージイベント以外（join / memberJoined / leave / memberLeft など）は無視する。**[MVP]**
-   - Person / Account は、メッセージを受信したときに「なければ作る」（[基本の流れ](#基本の流れ)の 1）ので、最初に発言した時点で必ず登録される。一度も発言しない人は Fairy にとって識別する必要がない。
+   - Person / Account は、メッセージを受信したときに「なければ作る」（[解決モジュールの処理フロー](#解決モジュールの処理フロー)の 1）ので、最初に発言した時点で必ず登録される。一度も発言しない人は Fairy にとって識別する必要がない。
    - 家族グループの groupId もメッセージイベントの `source.groupId` から分かる。
    - メッセージイベントでも、テキストとスタンプ以外（画像・動画・音声・ファイル・位置情報など）は無視する。保存もしない。**[MVP]** 画像は Phase 2 で扱う。
    - 発言者の userId が含まれないイベントは、発言者を識別できないので無視する。
 3. 会話を受け付けるかどうかを判定する（[会話の受け付け判定](#会話の受け付け判定)）。受け付けない会話は破棄する。
-4. 会話の ID（groupId または DM 相手の userId）に対応する ConversationAgent にイベントを渡す。
-5. ConversationAgent から返信内容を受け取ったら、Reply API で送る。「返信なし」を受け取ったら何もしない（[生成中に新しいメッセージが届いた場合](#生成中に新しいメッセージが届いた場合)）。
+4. イベントを `PlatformMessage`（プラットフォームに依存しない形）に変換し、Agent への入り口（解決モジュール）に渡す。
+5. 返信内容を受け取ったら、Reply API で送る。返信内容を受け取らなかったら何もしない（[生成中に新しいメッセージが届いた場合](#生成中に新しいメッセージが届いた場合)）。
    - Push API は無料で送れる通数に上限があるため、MVP では使わない。**[MVP]**
+
+## 解決モジュールの処理フロー
+
+受け口から受け取った `PlatformMessage` を、`ResolvedMessage` にして ConversationAgent に渡す（[全体設計](../design.md#受け口解決agent-の-3-つのレイヤーに分ける)）。
+
+1. **送信者の Account / Person を解決する**。D1 になければその場で作成する（[Account と Person の紐付け](../design.md#account-と-person-の紐付け)）。Person の役割（`persons.role`）も、ここで分かる。
+   - 表示名（`accounts.display_name`）は取得せず、空のままにする。**[MVP]** LINE の表示名が、Fairy にとっての正しい呼び名とは限らないため。呼び名は会話を通じて覚える（`persons.name`）。知らない人の LINE の表示名を Fairy が調べる手段は、後のフェーズで検討する（[後のフェーズで決めること](../plan.md#後のフェーズで決めること)）。
+2. **会話の場を解決する**。D1 になければその場で作成する。1 と 2 は並列に行う。
+3. **受信したメッセージを D1 に保存する**。スタンプは `packageId` / `stickerId` と、Webhook に含まれる場合は `keywords` を保存し、LLM にはキーワードをテキストとして渡す。
+   - 同じメッセージ（同じ会話で `platform_message_id` が同じもの）をすでに保存していたら、Webhook の再送などとみなし、ConversationAgent を呼ばずに終える。同じメッセージに二重に返信しないため。
+4. **会話ごとの ConversationAgent に `ResolvedMessage` を渡す**。返信内容を受け取ったら、そのまま受け口に返す。
 
 ## ConversationAgent の処理フロー
 
 ### 基本の流れ
 
-1. **送信者の Account / Person を解決する**。D1 になければその場で作成する。
-   - 表示名（`accounts.display_name`）は取得せず、空のままにする。**[MVP]** LINE の表示名が、Fairy にとっての正しい呼び名とは限らないため。呼び名は会話を通じて覚える（`persons.name`）。知らない人の LINE の表示名を Fairy が調べる手段は、後のフェーズで検討する（[後のフェーズで決めること](../plan.md#後のフェーズで決めること)）。
-2. **受信したメッセージを D1 に保存する**。スタンプは `packageId` / `stickerId` と、Webhook に含まれる場合は `keywords` を保存し、LLM にはキーワードをテキストとして渡す。
-3. 直近 N 件の会話履歴・`FAIRY.md`・人の情報からプロンプトを作る。
-4. LLM に **応答の要否と応答文を 1 回の呼び出しで** 出力させる（Structured Outputs、例: `{ should_reply: boolean, reply: string }`）。判定と生成を別々に呼ぶより呼び出し回数が少なく、コストを抑えられる。
+1. 直近 N 件の会話履歴・`FAIRY.md`・人の情報からプロンプトを作る（[プロンプトでの人の表し方](#プロンプトでの人の表し方)）。
+2. LLM に **応答の要否と応答文を 1 回の呼び出しで** 出力させる（Structured Outputs、例: `{ should_reply: boolean, reply: string }`）。判定と生成を別々に呼ぶより呼び出し回数が少なく、コストを抑えられる。
    - LLM の呼び出しにはタイムアウトを設ける（設定値 `OPENAI_TIMEOUT_SECONDS`、[設定値](#設定値)）。タイムアウトしたら返信せず、エラーをログに残す。
    - LINE 受け口モジュールが `ctx.waitUntil` で処理を延ばせるのは、レスポンスを返してから最大 30 秒。その中に LLM 以外の処理（Account の解決、保存、Reply API など）も入るので、タイムアウトは 25 秒にして 5 秒の余裕を残す。Cloudflare に打ち切られるとログを残せないため、その前に自分で打ち切る。
-5. `should_reply` が true なら、返信内容を LINE 受け口モジュールに渡して Reply API で送ってもらい、Fairy の発言を D1 に保存する。
+3. `should_reply` が true なら、返信内容を LINE 受け口モジュールに返して Reply API で送ってもらう。返すのと並行して、Fairy の発言を D1 に保存する（[応答速度と D1 への保存のタイミング](#応答速度と-d1-への保存のタイミング)）。
+
+### プロンプトでの人の表し方
+
+会話の履歴では、発言者を短い ID で表し、ID と人の対応は別の欄に一度だけ書く。
+
+```
+## この会話にいる人
+- P1: マスター
+- P2: 助手二号
+- P3: Fairy がまだ知らない人
+
+## 会話の履歴
+[P1] おはよう
+[P2] 今日って燃えるゴミの日だっけ
+[Fairy] 肯定。本日は燃えるゴミの収集日です。
+```
+
+- ID（`P1`、`P2`…）はプロンプトを作るたびに振る。Person の ID をそのまま使うより短く、トークンが少なくて済む。
+- 発言者を ID で表すのは、同じ人の発言を LLM が取り違えないようにするため。対応を別の欄にまとめておけば、人の情報が変わっても直すのはその欄だけで済む。
+- 人の欄には、分かっていることだけを書く。Phase 1 では Fairy は人の情報を覚えないので（[Fairy が覚える人の情報](../design.md#fairy-が覚える人の情報)）、書けるのは役割だけになる。**[MVP]**
+  - 役割（`persons.role`）が設定されている人: 「マスター」「助手二号」
+  - それ以外の人: 「Fairy がまだ知らない人」
+- 返信は、LLM が呼び名を使って直接書く。返信の中では ID で人を表し、あとで呼び名に置き換える方式（二段構成）にはしない。
+  - LLM は返信を書くときに、相手がマスターかどうかなどを知っている必要がある（`FAIRY.md` は相手によってふるまいを変える）。そのため、どちらの方式でも ID と呼び名の対応をプロンプトに入れることになり、置き換える段を足しても得るものがない。
+  - 置き換える段を足すと、LLM が置き換え用の書式を崩したときや、呼び名を知らない人のときの扱いを決める必要が出てくる。
 
 ### 生成中に新しいメッセージが届いた場合
 
@@ -105,6 +142,7 @@ sequenceDiagram
     participant L as LINE
     box Worker: fairy
         participant LM as LINE 受け口モジュール
+        participant R as 解決モジュール
         participant A as ConversationAgent
         participant S as ストレージモジュール
     end
@@ -113,32 +151,37 @@ sequenceDiagram
 
     L->>LM: メッセージ m1
     LM-->>L: 200
-    LM->>A: m1
-    A->>S: m1 を保存
+    LM->>R: m1
+    R->>S: m1 を保存
     S->>D: INSERT
+    R->>A: m1
     A->>O: 生成（履歴: 〜m1）
     L->>LM: メッセージ m2
     LM-->>L: 200
-    LM->>A: m2
-    A->>S: m2 を保存
+    LM->>R: m2
+    R->>S: m2 を保存
     S->>D: INSERT
+    R->>A: m2
     Note over A: 生成中に新着あり → 進行中の生成を中断して再生成
-    A-->>LM: m1 の呼び出しには「返信なし」
+    A-->>LM: m1 の呼び出しには返信内容を返さない
     A->>O: 再生成（履歴: 〜m2）
     O-->>A: 応答（〜m2 ベース）
-    A->>LM: 返信内容（m2 の replyToken）
-    LM->>L: Reply API
-    A->>S: Fairy の発言を保存
-    S->>D: INSERT
+    par
+        A->>LM: 返信内容（m2 の呼び出しに返す）
+        LM->>L: Reply API（m2 の replyToken）
+    and
+        A->>S: Fairy の発言を保存
+        S->>D: INSERT
+    end
 ```
 
-- 返信は、**再生成のきっかけになった最新のメッセージの呼び出し** が送る。中断された生成を待っていた呼び出し（上の図の m1）は、「返信なし」を受け取って終わる。
+- 返信は、**再生成のきっかけになった最新のメッセージの呼び出し** が送る。中断された生成を待っていた呼び出し（上の図の m1）は、返信内容を受け取らずに終わる。
   - こうすると、LINE 受け口モジュールのどの呼び出しも、待つのは 1 回分の生成時間だけになる。`ctx.waitUntil` で処理を延ばせるのはレスポンスを返してから最大 30 秒なので、再生成が続いてもこの時間に収まる。
 - 返信には **最新のメッセージの replyToken** を使う（replyToken はメッセージイベントごとに発行される）。
   - 再生成のきっかけは常に新着メッセージなので、返信に使う replyToken は「最後のメッセージを受け取ってから 1 回分の生成時間」しか経っていない。そのため、再生成が続いても replyToken が古くなることはない。
 - 中断は、進行中の OpenAI へのリクエストを `AbortController` で止めて行う。応答を待ってから捨てるより待ち時間が短い。
 - 再生成の回数には上限を設ける（設定値 `MAX_REGENERATIONS`、[設定値](#設定値)）。上限は大きめにし、通常は達しない想定。
-  - 上限に達したあとに届いたメッセージは、進行中の生成を中断しない。保存だけして、その呼び出しは「返信なし」で終わる。
+  - 上限に達したあとに届いたメッセージは、進行中の生成を中断しない。保存だけして、その呼び出しは返信内容を受け取らずに終わる。
   - 進行中の生成の返信は、その生成を始めた呼び出しが送る。
   - 上限に達したときの振る舞いは、実装が単純になることを優先している。上限に達したあとに届いたメッセージは、その返信には反映されない。
 
@@ -146,17 +189,19 @@ sequenceDiagram
 
 応答速度への影響が最も大きいのは LLM の呼び出し（数秒）で、D1 への書き込みは数〜数十ミリ秒程度と見込んでいる。そのため次のようにする。
 
-- **受信メッセージは LLM を呼ぶ前に保存する**。上の「生成中の新着」の検知と再生成には最新の履歴が必要なこと、LLM の呼び出しが失敗してもログが残ることが理由。
-- **Fairy の発言は返信を送った後に保存する**（応答時間に影響しない）。
-- 1 と 2（Account の解決とメッセージの保存）と履歴の取得は、並列にできる部分は並列に行う。
+- **受信メッセージは LLM を呼ぶ前に、解決モジュールで保存する**。上の「生成中の新着」の検知と再生成には最新の履歴が必要なこと、LLM の呼び出しが失敗してもログが残ることが理由。
+- **Fairy の発言は、返信内容を受け口に返すのと並行して保存する**（Durable Object の `waitUntil` で行い、応答時間に影響しない）。返信を送るのは受け口なので、Agent には送れたかどうかが分からない。そのため、Reply API での送信に失敗しても、Fairy の発言は履歴に残る。
+- Account と会話の場の解決は、並列に行う（[解決モジュールの処理フロー](#解決モジュールの処理フロー)）。
 - さらに速くする必要が出てきたら、直近の履歴を Durable Object 内にキャッシュし、D1 からの読み出しを省く。
 
 ## 会話の受け付け判定
 
+LINE 受け口モジュールが、設定値 `LINE_ALLOWED_CONVERSATION_IDS`（[設定値](#設定値)）に会話の ID（グループなら groupId、DM なら相手の userId）が含まれるかで判定する。D1 は引かない（[全体設計](../design.md#受け口解決agent-の-3-つのレイヤーに分ける)）。
+
 | 会話の種類 | 扱い |
 | --- | --- |
-| 家族グループ（設定値の groupId と一致） | 受け付ける |
-| マスター・助手二号との DM | 受け付ける |
+| 家族グループ（groupId を設定値に書く） | 受け付ける |
+| マスター・助手二号との DM（userId を設定値に書く） | 受け付ける |
 | それ以外の人との DM | 応答しない。保存もしない |
 | 家族グループ以外のグループ・複数人トーク | 退出はせず、応答しない。保存もしない。**[MVP]** 将来は `conversations` テーブルで受け付けるグループを管理できるようにする（管理方法は **[未決]**） |
 
@@ -205,9 +250,7 @@ sequenceDiagram
 | `LINE_CHANNEL_SECRET` | LINE の Channel Secret（署名検証に使う） | secrets | — |
 | `LINE_CHANNEL_ACCESS_TOKEN` | LINE の Channel Access Token（返信に使う） | secrets | — |
 | `OPENAI_API_KEY` | OpenAI の API Key | secrets | — |
-| `LINE_USER_ID_MASTER` | マスターの LINE userId | secrets | — |
-| `LINE_USER_ID_ASSISTANT2` | 助手二号の LINE userId | secrets | — |
-| `LINE_GROUP_ID_FAMILY` | 家族グループの groupId。**[MVP]** 受け付けるグループを `conversations` テーブルで管理するようになったら不要になる | secrets | — |
+| `LINE_ALLOWED_CONVERSATION_IDS` | 受け付ける会話の ID をカンマ区切りで並べる（家族グループの groupId、マスター・助手二号の userId）。LINE の ID は種類ごとに頭の文字が違う（ユーザーは `U`、グループは `C`）ので、DM とグループを 1 つのリストにまとめられる（[会話の受け付け判定](#会話の受け付け判定)） | secrets | — |
 | `OPENAI_MODEL` | LLM のモデル（[LLM のモデルと会話履歴の件数](#llm-のモデルと会話履歴の件数)） | vars | `gpt-6-luna` **[MVP]** |
 | `OPENAI_REASONING_EFFORT` | reasoning effort（[LLM のモデルと会話履歴の件数](#llm-のモデルと会話履歴の件数)） | vars | `none` **[MVP]** |
 | `OPENAI_TIMEOUT_SECONDS` | LLM の呼び出しのタイムアウト（秒）（[基本の流れ](#基本の流れ)） | vars | `25` |
