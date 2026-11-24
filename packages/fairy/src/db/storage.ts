@@ -16,14 +16,14 @@ type Platform = Account["platform"];
 type Message = typeof messages.$inferSelect;
 type Conversation = typeof conversations.$inferSelect;
 
-/** 会話の履歴の 1 件。発言者は、Account ではなく Person で表す */
-export interface HistoryMessage {
+/** 会話の履歴。発言者は、Account ではなく Person で表す */
+export type MessageHistory = {
   /** 発言者の Person の ID。Fairy 自身の発言は null */
   personId: Account["personId"] | null;
   type: Message["type"];
   text: Message["text"];
   createdAt: Message["createdAt"];
-}
+}[];
 
 /**
  * Account を取得する。なければ Person と一緒に作る
@@ -97,22 +97,14 @@ export const resolveConversation = async (
   return conversation;
 };
 
-/** 保存するメッセージ。ID は保存するときに振る */
-export interface NewMessage {
-  conversationId: Message["conversationId"];
-  accountId: Message["accountId"];
-  type: Message["type"];
-  text: Message["text"];
-  payloadJson: Message["payloadJson"];
-  platformMessageId: Message["platformMessageId"];
-  createdAt: Message["createdAt"];
-}
-
 /**
  * メッセージを保存し、保存したメッセージを返す。同じ会話で同じ platformMessageId のメッセージがすでにあれば、保存せずに undefined を返す
  * （LINE が Webhook を再送したときなどに、同じメッセージを二重に処理しないため）
  */
-export const saveMessage = async (db: Db, message: NewMessage): Promise<Message | undefined> => {
+export const saveMessage = async (
+  db: Db,
+  message: Omit<Message, "id">,
+): Promise<Message | undefined> => {
   const [inserted] = await db
     .insert(messages)
     .values({ id: crypto.randomUUID(), ...message })
@@ -126,7 +118,7 @@ export const getRecentMessages = async (
   db: Db,
   conversationId: string,
   limit: number,
-): Promise<HistoryMessage[]> => {
+): Promise<MessageHistory> => {
   const rows = await db
     .select({
       personId: accounts.personId,

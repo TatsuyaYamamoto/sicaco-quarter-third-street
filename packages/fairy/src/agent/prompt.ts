@@ -4,7 +4,7 @@
  * @see docs/phases/phase-1.md の「プロンプトでの人の表し方」
  */
 
-import type { HistoryMessage } from "../db/storage";
+import type { MessageHistory } from "../db/storage";
 import type { Role } from "../models/person";
 import type { IncomingMessage } from "./types";
 
@@ -46,7 +46,7 @@ export const buildConversationPrompt = ({
 }: {
   platform: IncomingMessage["platform"];
   conversationType: IncomingMessage["conversation"]["type"];
-  history: HistoryMessage[];
+  history: MessageHistory;
   /** Person の ID ごとの役割。役割のない人は含めない */
   roles: Map<string, Role>;
 }): string => {
