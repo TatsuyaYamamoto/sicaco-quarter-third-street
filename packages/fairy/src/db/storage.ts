@@ -13,14 +13,11 @@ export type Db = DrizzleD1Database;
 
 type Platform = Account["platform"];
 
-/** 会話の履歴の 1 件 */
-export interface HistoryMessage {
+/** 会話の履歴の 1 件。発言者は、Account ではなく Person で表す */
+export type HistoryMessage = Pick<typeof messages.$inferSelect, "type" | "text" | "createdAt"> & {
   /** 発言者の Person の ID。Fairy 自身の発言は null */
-  personId: string | null;
-  type: (typeof messages.$inferSelect)["type"];
-  text: string | null;
-  createdAt: string;
-}
+  personId: Account["personId"] | null;
+};
 
 /**
  * Account を取得する。なければ Person と一緒に作る
