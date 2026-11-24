@@ -95,19 +95,27 @@ export const resolveConversation = async (
 };
 
 /**
- * メッセージを保存する。同じ会話で同じ platformMessageId のメッセージがすでにあれば保存せず、false を返す
+ * {@link saveMessage} の結果
+ *
+ * - `saved`: 保存した
+ * - `alreadySaved`: 同じメッセージがすでに保存されていたので、保存しなかった
+ */
+export type SaveMessageResult = "saved" | "alreadySaved";
+
+/**
+ * メッセージを保存する。同じ会話で同じ platformMessageId のメッセージがすでにあれば保存しない
  * （LINE が Webhook を再送したときなどに、同じメッセージを二重に処理しないため）
  */
 export const saveMessage = async (
   db: Db,
   message: Omit<typeof messages.$inferInsert, "id">,
-): Promise<boolean> => {
+): Promise<SaveMessageResult> => {
   const inserted = await db
     .insert(messages)
     .values({ id: crypto.randomUUID(), ...message })
     .onConflictDoNothing()
     .returning({ id: messages.id });
-  return inserted.length > 0;
+  return inserted.length > 0 ? "saved" : "alreadySaved";
 };
 
 /** 直近の会話の履歴を、古い順に取得する */

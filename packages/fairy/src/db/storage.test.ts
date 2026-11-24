@@ -63,10 +63,10 @@ describe("saveMessage / getRecentMessages", () => {
     return { account, conversation, save };
   };
 
-  it("同じ platformMessageId のメッセージは保存せず、false を返す", async () => {
+  it("同じ platformMessageId のメッセージは保存せず、alreadySaved を返す", async () => {
     const { save } = await setup();
-    expect(await save("m1", now)).toBe(true);
-    expect(await save("m1", now)).toBe(false);
+    expect(await save("m1", now)).toBe("saved");
+    expect(await save("m1", now)).toBe("alreadySaved");
   });
 
   it("直近の件数だけを古い順に返す。Fairy の発言は personId が null", async () => {

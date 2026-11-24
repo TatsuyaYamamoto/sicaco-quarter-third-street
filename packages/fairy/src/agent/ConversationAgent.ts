@@ -46,7 +46,7 @@ export class ConversationAgent extends Agent<Cloudflare.Env> {
       ),
     ]);
 
-    const saved = await saveMessage(db, {
+    const result = await saveMessage(db, {
       conversationId: conversation.id,
       accountId: account.id,
       type: message.message.type,
@@ -58,7 +58,7 @@ export class ConversationAgent extends Agent<Cloudflare.Env> {
       platformMessageId: message.message.platformMessageId,
       createdAt: message.sentAt,
     });
-    if (!saved) {
+    if (result === "alreadySaved") {
       // すでに受け取ったメッセージ（Webhook の再送など）なので、二重に返信しない
       return undefined;
     }
