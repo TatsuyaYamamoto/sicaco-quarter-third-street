@@ -16,15 +16,6 @@ type Platform = Account["platform"];
 type Message = typeof messages.$inferSelect;
 type Conversation = typeof conversations.$inferSelect;
 
-/** 会話の履歴。発言者は、Account ではなく Person で表す */
-export type MessageHistory = {
-  /** 発言者の Person の ID。Fairy 自身の発言は null */
-  personId: Account["personId"] | null;
-  type: Message["type"];
-  text: Message["text"];
-  createdAt: Message["createdAt"];
-}[];
-
 /**
  * Account を取得する。なければ Person と一緒に作る
  *
@@ -103,7 +94,10 @@ export const resolveConversation = async (
  */
 export const saveMessage = async (
   db: Db,
-  message: Omit<Message, "id">,
+  message: Omit<
+    Message,
+    "id" // id は自動採番するので、外部からは指定しない
+  >,
 ): Promise<Message | undefined> => {
   const [inserted] = await db
     .insert(messages)
@@ -113,8 +107,17 @@ export const saveMessage = async (
   return inserted;
 };
 
+/** 会話の履歴。発言者は、Account ではなく Person で表す */
+export type MessageHistory = {
+  /** 発言者の Person の ID。Fairy 自身の発言は null */
+  personId: Account["personId"] | null;
+  type: Message["type"];
+  text: Message["text"];
+  createdAt: Message["createdAt"];
+}[];
+
 /** 直近の会話の履歴を、古い順に取得する */
-export const getRecentMessages = async (
+export const getRecentMessageHistory = async (
   db: Db,
   conversationId: string,
   limit: number,

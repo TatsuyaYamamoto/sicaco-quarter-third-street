@@ -10,7 +10,7 @@ import fairyMd from "../../../../FAIRY.md";
 import { loadConfig } from "../config";
 import {
   getAccountsByPerson,
-  getRecentMessages,
+  getRecentMessageHistory,
   resolveAccount,
   resolveConversation,
   saveMessage,
@@ -63,7 +63,7 @@ export class ConversationAgent extends Agent<Cloudflare.Env> {
       return undefined;
     }
 
-    const history = await getRecentMessages(db, conversation.id, config.HISTORY_LIMIT);
+    const history = await getRecentMessageHistory(db, conversation.id, config.HISTORY_LIMIT);
     const personIds = [
       ...new Set(history.flatMap(({ personId }) => (personId === null ? [] : [personId]))),
     ];

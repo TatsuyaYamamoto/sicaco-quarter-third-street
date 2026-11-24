@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { persons } from "./schema";
 import {
   getAccountsByPerson,
-  getRecentMessages,
+  getRecentMessageHistory,
   resolveAccount,
   resolveConversation,
   saveMessage,
@@ -38,7 +38,7 @@ describe("resolveConversation", () => {
   });
 });
 
-describe("saveMessage / getRecentMessages", () => {
+describe("saveMessage / getRecentMessageHistory", () => {
   const setup = async () => {
     const account = await resolveAccount(
       db,
@@ -75,7 +75,7 @@ describe("saveMessage / getRecentMessages", () => {
     await save("m2", "2026-11-24T00:00:02.000Z");
     await save("fairy", "2026-11-24T00:00:03.000Z", null);
 
-    const history = await getRecentMessages(db, conversation.id, 2);
+    const history = await getRecentMessageHistory(db, conversation.id, 2);
     expect(history).toEqual([
       {
         personId: account.personId,
