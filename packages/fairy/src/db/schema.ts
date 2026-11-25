@@ -3,11 +3,14 @@
  */
 
 import { index, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { ROLES } from "../agent/types";
 
 export const persons = sqliteTable("persons", {
   id: text("id").primaryKey(),
   name: text("name"),
   notes: text("notes"),
+  /** オーナーが SQL で設定する */
+  role: text("role", { enum: ROLES }),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });

@@ -5,7 +5,7 @@
  */
 
 import type { messagingApi, webhook } from "@line/bot-sdk";
-import type { IncomingMessage } from "../agent/types";
+import type { PlatformMessage } from "../agent/types";
 import type { Config } from "../config";
 import { decodeBase64, verifyHmacSha256 } from "./utils";
 
@@ -39,8 +39,8 @@ export const isLineMessageEvent = (event: webhook.Event): event is LineMessageEv
   event.replyToken !== undefined &&
   (event.message.type === "text" || event.message.type === "sticker");
 
-/** メッセージイベントを IncomingMessage に変換する。発言者や会話が分からないイベントなら null を返す */
-export const toIncomingMessage = (event: LineMessageEvent): IncomingMessage | null => {
+/** メッセージイベントを PlatformMessage に変換する。発言者や会話が分からないイベントなら null を返す */
+export const toPlatformMessage = (event: LineMessageEvent): PlatformMessage | null => {
   const { source, message } = event;
   if (source === undefined || source.type === "room" || source.userId === undefined) {
     return null;
@@ -64,21 +64,14 @@ export const toIncomingMessage = (event: LineMessageEvent): IncomingMessage | nu
 };
 
 /**
- * 会話を受け付けるかどうかを判定する。受け付けるのは家族グループと、マスター・助手二号との DM だけ
+ * 会話を受け付けるかどうかを判定する。会話の ID（グループなら groupId、DM なら相手の userId）が設定値に含まれていれば受け付ける
  *
  * @see docs/phases/phase-1.md の「会話の受け付け判定」
  */
 export const isAcceptedConversation = (
-  conversation: IncomingMessage["conversation"],
-  config: Pick<Config, "LINE_GROUP_ID_FAMILY" | "LINE_USER_ID_MASTER" | "LINE_USER_ID_ASSISTANT2">,
-): boolean => {
-  if (conversation.type === "group") {
-    return conversation.platformConversationId === config.LINE_GROUP_ID_FAMILY;
-  }
-  return [config.LINE_USER_ID_MASTER, config.LINE_USER_ID_ASSISTANT2].includes(
-    conversation.platformConversationId,
-  );
-};
+  conversation: PlatformMessage["conversation"],
+  config: Pick<Config, "LINE_ALLOWED_CONVERSATION_IDS">,
+): boolean => config.LINE_ALLOWED_CONVERSATION_IDS.includes(conversation.platformConversationId);
 
 const API_BASE_URL = "https://api.line.me/v2/bot";
 
