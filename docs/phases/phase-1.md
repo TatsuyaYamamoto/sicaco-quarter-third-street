@@ -61,7 +61,8 @@ flowchart LR
     AG -- 履歴の取得・Fairy の発言の保存 --> ST
     ST --> D1
     AG -- 応答の判定と生成 --> OAI
-    AG -- 返信内容 --> LM
+    AG -- Reply --> RS
+    RS -- Reply --> LM
     LM -- Reply API --> LINE
 ```
 
@@ -84,7 +85,7 @@ flowchart LR
    - 発言者の userId が含まれないイベントは、発言者を識別できないので無視する。
 3. 会話を受け付けるかどうかを判定する（[会話の受け付け判定](#会話の受け付け判定)）。受け付けない会話は破棄する。
 4. イベントを `PlatformMessage`（プラットフォームに依存しない形）に変換し、Agent への入り口（MessageResolver）に渡す。
-5. 返信内容を受け取ったら、Reply API で送る。返信内容を受け取らなかったら何もしない（[生成中に新しいメッセージが届いた場合](#生成中に新しいメッセージが届いた場合)）。
+5. `Reply` を受け取ったら、Reply API で送る。`Reply` を受け取らなかったら何もしない（[生成中に新しいメッセージが届いた場合](#生成中に新しいメッセージが届いた場合)）。
    - Push API は無料で送れる通数に上限があるため、MVP では使わない。**[MVP]**
 
 ## MessageResolver の処理フロー
@@ -96,7 +97,7 @@ Platform Adapter から受け取った `PlatformMessage` を、`ResolvedMessage`
 2. **会話の場を解決する**。D1 になければその場で作成する。1 と 2 は並列に行う。
 3. **受信したメッセージを D1 に保存する**。スタンプは `packageId` / `stickerId` と、Webhook に含まれる場合は `keywords` を保存し、LLM にはキーワードをテキストとして渡す。
    - 同じメッセージ（同じ会話で `platform_message_id` が同じもの）をすでに保存していたら、Webhook の再送などとみなし、ConversationAgent を呼ばずに終える。同じメッセージに二重に返信しないため。
-4. **会話ごとの ConversationAgent に `ResolvedMessage` を渡す**。返信内容を受け取ったら、そのまま Platform Adapter に返す。
+4. **会話ごとの ConversationAgent に `ResolvedMessage` を渡す**。`Reply` を受け取ったら、そのまま Platform Adapter に返す。
 
 ## ConversationAgent の処理フロー
 
@@ -106,7 +107,7 @@ Platform Adapter から受け取った `PlatformMessage` を、`ResolvedMessage`
 2. LLM に **応答の要否と応答文を 1 回の呼び出しで** 出力させる（Structured Outputs、例: `{ should_reply: boolean, reply: string }`）。判定と生成を別々に呼ぶより呼び出し回数が少なく、コストを抑えられる。
    - LLM の呼び出しにはタイムアウトを設ける（設定値 `OPENAI_TIMEOUT_SECONDS`、[設定値](#設定値)）。タイムアウトしたら返信せず、エラーをログに残す。
    - Platform Adapter (LINE) が `ctx.waitUntil` で処理を延ばせるのは、レスポンスを返してから最大 30 秒。その中に LLM 以外の処理（Account の解決、保存、Reply API など）も入るので、タイムアウトは 25 秒にして 5 秒の余裕を残す。Cloudflare に打ち切られるとログを残せないため、その前に自分で打ち切る。
-3. `should_reply` が true なら、返信内容を Platform Adapter (LINE) に返して Reply API で送ってもらう。返すのと並行して、Fairy の発言を D1 に保存する（[応答速度と D1 への保存のタイミング](#応答速度と-d1-への保存のタイミング)）。
+3. `should_reply` が true なら、`Reply` を Platform Adapter (LINE) に返して Reply API で送ってもらう。返すのと並行して、Fairy の発言を D1 に保存する（[応答速度と D1 への保存のタイミング](#応答速度と-d1-への保存のタイミング)）。
 
 ### プロンプトでの人の表し方
 
@@ -163,11 +164,11 @@ sequenceDiagram
     S->>D: INSERT
     R->>A: m2
     Note over A: 生成中に新着あり → 進行中の生成を中断して再生成
-    A-->>LM: m1 の呼び出しには返信内容を返さない
+    A-->>LM: m1 の呼び出しには Reply を返さない
     A->>O: 再生成（履歴: 〜m2）
     O-->>A: 応答（〜m2 ベース）
     par
-        A->>LM: 返信内容（m2 の呼び出しに返す）
+        A->>LM: Reply（m2 の呼び出しに返す）
         LM->>L: Reply API（m2 の replyToken）
     and
         A->>S: Fairy の発言を保存
@@ -175,13 +176,13 @@ sequenceDiagram
     end
 ```
 
-- 返信は、**再生成のきっかけになった最新のメッセージの呼び出し** が送る。中断された生成を待っていた呼び出し（上の図の m1）は、返信内容を受け取らずに終わる。
+- 返信は、**再生成のきっかけになった最新のメッセージの呼び出し** が送る。中断された生成を待っていた呼び出し（上の図の m1）は、`Reply` を受け取らずに終わる。
   - こうすると、Platform Adapter (LINE) のどの呼び出しも、待つのは 1 回分の生成時間だけになる。`ctx.waitUntil` で処理を延ばせるのはレスポンスを返してから最大 30 秒なので、再生成が続いてもこの時間に収まる。
 - 返信には **最新のメッセージの replyToken** を使う（replyToken はメッセージイベントごとに発行される）。
   - 再生成のきっかけは常に新着メッセージなので、返信に使う replyToken は「最後のメッセージを受け取ってから 1 回分の生成時間」しか経っていない。そのため、再生成が続いても replyToken が古くなることはない。
 - 中断は、進行中の OpenAI へのリクエストを `AbortController` で止めて行う。応答を待ってから捨てるより待ち時間が短い。
 - 再生成の回数には上限を設ける（設定値 `MAX_REGENERATIONS`、[設定値](#設定値)）。上限は大きめにし、通常は達しない想定。
-  - 上限に達したあとに届いたメッセージは、進行中の生成を中断しない。保存だけして、その呼び出しは返信内容を受け取らずに終わる。
+  - 上限に達したあとに届いたメッセージは、進行中の生成を中断しない。保存だけして、その呼び出しは `Reply` を受け取らずに終わる。
   - 進行中の生成の返信は、その生成を始めた呼び出しが送る。
   - 上限に達したときの振る舞いは、実装が単純になることを優先している。上限に達したあとに届いたメッセージは、その返信には反映されない。
 
@@ -190,7 +191,7 @@ sequenceDiagram
 応答速度への影響が最も大きいのは LLM の呼び出し（数秒）で、D1 への書き込みは数〜数十ミリ秒程度と見込んでいる。そのため次のようにする。
 
 - **受信メッセージは LLM を呼ぶ前に、MessageResolver で保存する**。上の「生成中の新着」の検知と再生成には最新の履歴が必要なこと、LLM の呼び出しが失敗してもログが残ることが理由。
-- **Fairy の発言は、返信内容を Platform Adapter に返すのと並行して保存する**（Durable Object の `waitUntil` で行い、応答時間に影響しない）。返信を送るのは Platform Adapter なので、Agent には送れたかどうかが分からない。そのため、Reply API での送信に失敗しても、Fairy の発言は履歴に残る。
+- **Fairy の発言は、`Reply` を Platform Adapter に返すのと並行して保存する**（Durable Object の `waitUntil` で行い、応答時間に影響しない）。返信を送るのは Platform Adapter なので、Agent には送れたかどうかが分からない。そのため、Reply API での送信に失敗しても、Fairy の発言は履歴に残る。
   - 次の生成は、保存中の Fairy の発言があれば、その保存が終わってから始める。Fairy が自分の返信を知らないまま、次の返信を生成しないようにするため（同じことを 2 回言うなど）。
 - Account と会話の場の解決は、並列に行う（[MessageResolver の処理フロー](#messageresolver-の処理フロー)）。
 - さらに速くする必要が出てきたら、直近の履歴を Durable Object 内にキャッシュし、D1 からの読み出しを省く。

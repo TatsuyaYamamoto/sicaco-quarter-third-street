@@ -92,7 +92,7 @@ Fairy を AI Agent として育てていくと、LINE・専用 UI・音声のど
 | --- | --- | --- |
 | Platform Adapter | プラットフォーム固有の処理（LINE なら署名検証・受け付け判定・イベントの変換・Reply API での送信）。プラットフォームごとにある | `PlatformMessage`: プラットフォームに依存しない形にそろえたメッセージ。中身の ID はプラットフォームのもの |
 | MessageResolver | Account から Person を引き（なければ作る）、会話の場を解決し、受け取ったメッセージを保存する | `ResolvedMessage`: Account・Person（`Role` を含む）・会話の場を解決したメッセージ |
-| Agent | プラットフォームに依存しない会話処理（履歴・プロンプト・LLM・再生成の制御）。Durable Object `ConversationAgent` | 返信の内容 |
+| Agent | プラットフォームに依存しない会話処理（履歴・プロンプト・LLM・再生成の制御）。Durable Object `ConversationAgent` | `Reply`: 返信の内容。返信しないときは返さない |
 
 - 受け付け判定（誰と会話するか）は、Platform Adapter の責任にする。受け付ける会話は、Platform Adapter の設定値で持つ（[設定値](phases/phase-1.md#設定値)）。D1 を引かずに判定できるので速く、受け付けない入力を早い段階で捨てられる。
 - MessageResolver は、Agent への入り口の関数の中で、Worker で動かす（ConversationAgent を呼ぶ前）。Platform Adapter は、どのプラットフォームでも同じ入り口を呼ぶだけで済み、Agent は解決済みの入力を受け取るだけで済む。
