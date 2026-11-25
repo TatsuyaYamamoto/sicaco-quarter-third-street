@@ -70,16 +70,16 @@ flowchart LR
 | --- | --- |
 | Worker (`fairy`) | デプロイ単位。以下のモジュールを含む |
 | └ Platform Adapter (LINE) | LINE とのやり取り（[Platform Adapter (LINE) の処理フロー](#platform-adapter-line-の処理フロー)） |
-| └ MessageResolver | Platform Adapter から受け取ったメッセージの Account・Person・会話の場を解決し、保存して、ConversationAgent に渡す。Agent への入り口の関数の中で、Worker で動く（[MessageResolver の処理フロー](#messageresolver-の処理フロー)） |
+| └ MessageResolver | Platform Adapter から受け取ったメッセージの `Account`・`Person`・会話の場を解決し、保存して、ConversationAgent に渡す。Agent への入り口の関数の中で、Worker で動く（[MessageResolver の処理フロー](#messageresolver-の処理フロー)） |
 | └ Agent (`ConversationAgent`) | Agents SDK の Agent クラス（Durable Object）。会話（グループや DM）ごとに 1 インスタンス（[ConversationAgent の処理フロー](#conversationagent-の処理フロー)） |
 | └ ストレージモジュール | D1 への読み書きをまとめる |
-| D1 | Person / Account / 会話 / メッセージを保存する（[データモデル](../design.md#データモデル)） |
+| D1 | `Person` / `Account` / 会話 / メッセージを保存する（[データモデル](../design.md#データモデル)） |
 
 ## Platform Adapter (LINE) の処理フロー
 
 1. Webhook を受け取って署名 (`x-line-signature`) を検証し、すぐに 200 を返す（以降の処理は `ctx.waitUntil` で行う）。署名が正しくなければ 401 を返し、何もしない。
 2. メッセージイベント以外（join / memberJoined / leave / memberLeft など）は無視する。**[MVP]**
-   - Person / Account は、メッセージを受信したときに「なければ作る」（[MessageResolver の処理フロー](#messageresolver-の処理フロー)の 1）ので、最初に発言した時点で必ず登録される。一度も発言しない人は Fairy にとって識別する必要がない。
+   - `Person` / `Account` は、メッセージを受信したときに「なければ作る」（[MessageResolver の処理フロー](#messageresolver-の処理フロー)の 1）ので、最初に発言した時点で必ず登録される。一度も発言しない人は Fairy にとって識別する必要がない。
    - 家族グループの groupId もメッセージイベントの `source.groupId` から分かる。
    - メッセージイベントでも、テキストとスタンプ以外（画像・動画・音声・ファイル・位置情報など）は無視する。保存もしない。**[MVP]** 画像は Phase 2 で扱う。
    - 発言者の userId が含まれないイベントは、発言者を識別できないので無視する。
@@ -92,7 +92,7 @@ flowchart LR
 
 Platform Adapter から受け取った `PlatformMessage` を、`ResolvedMessage` にして ConversationAgent に渡す（[全体設計](../design.md#3-つのレイヤーに分ける)）。
 
-1. **送信者の Account / Person を解決する**。D1 になければその場で作成する（[Account と Person の紐付け](../design.md#account-と-person-の紐付け)）。Person の `Role`（`persons.role`）も、ここで分かる。
+1. **送信者の `Account` / `Person` を解決する**。D1 になければその場で作成する（[`Account` と `Person` の紐付け](../design.md#account-と-person-の紐付け)）。`Person` の `Role`（`persons.role`）も、ここで分かる。
    - 表示名（`accounts.display_name`）は取得せず、空のままにする。**[MVP]** LINE の表示名が、Fairy にとっての正しい呼び名とは限らないため。呼び名は会話を通じて覚える（`persons.name`）。知らない人の LINE の表示名を Fairy が調べる手段は、後のフェーズで検討する（[後のフェーズで決めること](../plan.md#後のフェーズで決めること)）。
 2. **会話の場を解決する**。D1 になければその場で作成する。1 と 2 は並列に行う。
 3. **受信したメッセージを D1 に保存する**。スタンプは `packageId` / `stickerId` と、Webhook に含まれる場合は `keywords` を保存し、LLM にはキーワードをテキストとして渡す。
@@ -106,7 +106,7 @@ Platform Adapter から受け取った `PlatformMessage` を、`ResolvedMessage`
 1. 直近 N 件の会話履歴・`FAIRY.md`・人の情報からプロンプトを作る（[プロンプトでの人の表し方](#プロンプトでの人の表し方)）。
 2. LLM に **応答の要否と応答文を 1 回の呼び出しで** 出力させる（Structured Outputs、例: `{ should_reply: boolean, reply: string }`）。判定と生成を別々に呼ぶより呼び出し回数が少なく、コストを抑えられる。
    - LLM の呼び出しにはタイムアウトを設ける（設定値 `OPENAI_TIMEOUT_SECONDS`、[設定値](#設定値)）。タイムアウトしたら返信せず、エラーをログに残す。
-   - Platform Adapter (LINE) が `ctx.waitUntil` で処理を延ばせるのは、レスポンスを返してから最大 30 秒。その中に LLM 以外の処理（Account の解決、保存、Reply API など）も入るので、タイムアウトは 25 秒にして 5 秒の余裕を残す。Cloudflare に打ち切られるとログを残せないため、その前に自分で打ち切る。
+   - Platform Adapter (LINE) が `ctx.waitUntil` で処理を延ばせるのは、レスポンスを返してから最大 30 秒。その中に LLM 以外の処理（`Account` の解決、保存、Reply API など）も入るので、タイムアウトは 25 秒にして 5 秒の余裕を残す。Cloudflare に打ち切られるとログを残せないため、その前に自分で打ち切る。
 3. `should_reply` が true なら、`Reply` を Platform Adapter (LINE) に返して Reply API で送ってもらう。返すのと並行して、Fairy の発言を D1 に保存する（[応答速度と D1 への保存のタイミング](#応答速度と-d1-への保存のタイミング)）。
 
 ### プロンプトでの人の表し方
@@ -125,7 +125,7 @@ Platform Adapter から受け取った `PlatformMessage` を、`ResolvedMessage`
 [Fairy] 肯定。本日は燃えるゴミの収集日です。
 ```
 
-- ID（`P1`、`P2`…）はプロンプトを作るたびに振る。Person の ID をそのまま使うより短く、トークンが少なくて済む。
+- ID（`P1`、`P2`…）はプロンプトを作るたびに振る。`Person` の ID をそのまま使うより短く、トークンが少なくて済む。
 - 発言者を ID で表すのは、同じ人の発言を LLM が取り違えないようにするため。対応を別の欄にまとめておけば、人の情報が変わっても直すのはその欄だけで済む。
 - 人の欄には、分かっていることだけを書く。Phase 1 では Fairy は人の情報を覚えないので（[Fairy が覚える人の情報](../design.md#fairy-が覚える人の情報)）、書けるのは `Role` だけになる。**[MVP]**
   - `Role`（`persons.role`）が設定されている人: 「マスター」「助手二号」
@@ -193,7 +193,7 @@ sequenceDiagram
 - **受信メッセージは LLM を呼ぶ前に、MessageResolver で保存する**。上の「生成中の新着」の検知と再生成には最新の履歴が必要なこと、LLM の呼び出しが失敗してもログが残ることが理由。
 - **Fairy の発言は、`Reply` を Platform Adapter に返すのと並行して保存する**（Durable Object の `waitUntil` で行い、応答時間に影響しない）。返信を送るのは Platform Adapter なので、Agent には送れたかどうかが分からない。そのため、Reply API での送信に失敗しても、Fairy の発言は履歴に残る。
   - 次の生成は、保存中の Fairy の発言があれば、その保存が終わってから始める。Fairy が自分の返信を知らないまま、次の返信を生成しないようにするため（同じことを 2 回言うなど）。
-- Account と会話の場の解決は、並列に行う（[MessageResolver の処理フロー](#messageresolver-の処理フロー)）。
+- `Account` と会話の場の解決は、並列に行う（[MessageResolver の処理フロー](#messageresolver-の処理フロー)）。
 - さらに速くする必要が出てきたら、直近の履歴を Durable Object 内にキャッシュし、D1 からの読み出しを省く。
 
 ## 会話の受け付け判定

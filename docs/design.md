@@ -41,35 +41,35 @@ Fairy は LINE などのアカウントではなく **「人間」** を識別�
 
 - LINE では `userId` や表示名などを手がかりに「この人間は誰か」を識別する。
 - 音声や専用 UI など、ほかの環境でも同じように「この人間は誰か」を識別する。
-- 別々の Account の人が同一人物かどうかは、**会話の流れから判断する**（[Account と Person の紐付け](#account-と-person-の紐付け)）。
-- ただし **「誰がマスターで、誰が助手二号か」（`Role`）** だけは特別な情報として、オーナーが Person に設定する（[`Role`](#role)）。
+- 別々の `Account` の人が同一人物かどうかは、**会話の流れから判断する**（[`Account` と `Person` の紐付け](#account-と-person-の紐付け)）。
+- ただし **「誰がマスターで、誰が助手二号か」（`Role`）** だけは特別な情報として、オーナーが `Person` に設定する（[`Role`](#role)）。
 
 ### 概念モデル
 
-- **Person（人間）**: Fairy が識別する 1 人の人間。
-- **Account（アカウント）**: ある環境（プラットフォーム）での利用者のアカウント。LINE の 1 ユーザー、専用 UI のログインユーザーなどが該当する。1 人の Person が複数の Account を持つ。
+- **`Person`**: Fairy が識別する 1 人の人間。
+- **`Account`**: ある環境（プラットフォーム）での利用者のアカウント。LINE の 1 ユーザー、専用 UI のログインユーザーなどが該当する。1 人の `Person` が複数の `Account` を持つ。
 - **Platform（プラットフォーム）**: Fairy とやり取りする環境の種類。`line` / `web`（専用 UI）/ `voice`（iPad の音声）など。
   - LINE 以外のプラットフォームで「アカウント」を何で表すか（専用 UI のログイン ID、音声なら端末や声紋など）は、そのプラットフォームを追加するフェーズで決める。**[未決]**
-- **`Role`**: Person の属性。`master`（マスター）/ `assistant2`（助手二号）。ほとんどの Person は `Role` を持たない。
+- **`Role`**: `Person` の属性。`master`（マスター）/ `assistant2`（助手二号）。ほとんどの `Person` は `Role` を持たない。
 
 テーブル定義は [データモデル](#データモデル) を参照。
 
-### Account と Person の紐付け
+### `Account` と `Person` の紐付け
 
-Fairy の処理（LLM）で Account と Person を紐付けると、返信に時間がかかる。そのため、Agent に渡す前に、Account から Person を引いておく（[全体アーキテクチャ](#全体アーキテクチャ) の MessageResolver）。
+Fairy の処理（LLM）で `Account` と `Person` を紐付けると、返信に時間がかかる。そのため、Agent に渡す前に、`Account` から `Person` を引いておく（[全体アーキテクチャ](#全体アーキテクチャ) の MessageResolver）。
 
-- 知らない Account から最初のメッセージが届いたら、Person も一緒に作る。この Person は、あとで既存の Person と同じ人だと分かったら、既存の Person に結合することがある。
-- 同じ人だと分かったときの結合（2 つの Person を 1 人にまとめること）は、2 つ目のプラットフォームを追加する Phase 5 で決める。**[未決]** MVP は LINE だけなので、結合は起きない。
+- 知らない `Account` から最初のメッセージが届いたら、`Person` も一緒に作る。この `Person` は、あとで既存の `Person` と同じ人だと分かったら、既存の `Person` に結合することがある。
+- 同じ人だと分かったときの結合（2 つの `Person` を 1 人にまとめること）は、2 つ目のプラットフォームを追加する Phase 5 で決める。**[未決]** MVP は LINE だけなので、結合は起きない。
   - 案: マスターか助手二号から「同じ人だ」という承認を得てから結合する。
-  - 結合では、Account の付け替えだけでなく、暫定の Person について Fairy が覚えたこと（呼び名や関係）もまとめる必要がある。
+  - 結合では、`Account` の付け替えだけでなく、暫定の `Person` について Fairy が覚えたこと（呼び名や関係）もまとめる必要がある。
 
 ### `Role`
 
-`Role` は Person の属性として、D1 に持つ（`persons.role`）。発言者の `Role` は、Account から Person を引けば分かる。
+`Role` は `Person` の属性として、D1 に持つ（`persons.role`）。発言者の `Role` は、`Account` から `Person` を引けば分かる。
 
-- `Role` は、オーナーが SQL で設定する。マスター・助手二号も、最初のメッセージで Person が作られる。`Role` を設定するまでは、Fairy にとって「まだ知らない人」として扱う。**[MVP]**
-- `Role` は D1 だけに持ち、設定値には持たない。`Role` は Person のものなので、Account の ID を設定値に書くと、プラットフォームごとに ID を書く必要があり、判定も Account を経由した回り道になるため。D1 だけに持つので、設定値と食い違う心配もない。
-- 別のプラットフォームの Account が同じ Person に結合されれば、その Account からの発言も同じ `Role` の人の発言になる。
+- `Role` は、オーナーが SQL で設定する。マスター・助手二号も、最初のメッセージで `Person` が作られる。`Role` を設定するまでは、Fairy にとって「まだ知らない人」として扱う。**[MVP]**
+- `Role` は D1 だけに持ち、設定値には持たない。`Role` は `Person` のものなので、`Account` の ID を設定値に書くと、プラットフォームごとに ID を書く必要があり、判定も `Account` を経由した回り道になるため。D1 だけに持つので、設定値と食い違う心配もない。
+- 別のプラットフォームの `Account` が同じ `Person` に結合されれば、その `Account` からの発言も同じ `Role` の人の発言になる。
 - 誰と会話するか（受け付ける DM の相手やグループ）は、`Role` とは別に、Platform Adapter の設定値で持つ（[全体アーキテクチャ](#全体アーキテクチャ)）。「Fairy と会話できるか」はアクセスの制御で、「Fairy にとって誰か」とは別の関心事なため。
 
 ### Fairy が覚える人の情報
@@ -77,9 +77,9 @@ Fairy の処理（LLM）で Account と Person を紐付けると、返信に時
 Fairy が人について持つ情報（呼び名、どういう人か、人と人の関係）は、**Fairy の目線のもの** で、Fairy が会話を通じて覚える。開発者やオーナーが直接書き込むことは想定しない。
 
 - 例外は `Role`（マスター・助手二号）だけで、これはオーナーが設定する（[`Role`](#role)）。Fairy から見たマスター・助手二号の位置づけは [`FAIRY.md`](../FAIRY.md) に書く。
-- 関係には、Fairy から見た各人だけでなく、**各人から見た Fairy やほかの人** も含む（例: Person 1 にとって Fairy や Person 2 はどういう存在か）。誰が誰にとってどういう存在かが分からないと、Fairy の発言として自然にならないため。
+- 関係には、Fairy から見た各人だけでなく、**各人から見た Fairy やほかの人** も含む（例: `Person` 1 にとって Fairy や `Person` 2 はどういう存在か）。誰が誰にとってどういう存在かが分からないと、Fairy の発言として自然にならないため。
 - LINE の表示名など、プラットフォーム上の名前は Fairy にとっての正しい呼び名とは限らない。呼び名を確かめるには、本人と話すしかない。
-- Person は家族に限らず増えていくので、人の情報は D1 に持つ。人や組み合わせごとに増やせて、Fairy（Agent）が書き込めるため。リポジトリは公開しているので、実在の人の情報はリポジトリに置かない。
+- `Person` は家族に限らず増えていくので、人の情報は D1 に持つ。人や組み合わせごとに増やせて、Fairy（Agent）が書き込めるため。リポジトリは公開しているので、実在の人の情報はリポジトリに置かない。
 - 覚える仕組みとデータモデルは、長期記憶（Phase 3）と合わせて決める。**[未決]**（[後のフェーズで決めること](plan.md#後のフェーズで決めること)）
 
 ## 全体アーキテクチャ
@@ -91,7 +91,7 @@ Fairy を AI Agent として育てていくと、LINE・専用 UI・音声のど
 | レイヤー | 受け持つこと | 次のレイヤーへの出力 |
 | --- | --- | --- |
 | Platform Adapter | プラットフォーム固有の処理（LINE なら署名検証・受け付け判定・イベントの変換・Reply API での送信）。プラットフォームごとにある | `PlatformMessage`: プラットフォームに依存しない形にそろえたメッセージ。中身の ID はプラットフォームのもの |
-| MessageResolver | Account から Person を引き（なければ作る）、会話の場を解決し、受け取ったメッセージを保存する | `ResolvedMessage`: Account・Person（`Role` を含む）・会話の場を解決したメッセージ |
+| MessageResolver | `Account` から `Person` を引き（なければ作る）、会話の場を解決し、受け取ったメッセージを保存する | `ResolvedMessage`: `Account`・`Person`（`Role` を含む）・会話の場を解決したメッセージ |
 | Agent | プラットフォームに依存しない会話処理（履歴・プロンプト・LLM・再生成の制御）。Durable Object `ConversationAgent` | `Reply`: 返信の内容。返信しないときは返さない |
 
 - 受け付け判定（誰と会話するか）は、Platform Adapter の責任にする。受け付ける会話は、Platform Adapter の設定値で持つ（[設定値](phases/phase-1.md#設定値)）。D1 を引かずに判定できるので速く、受け付けない入力を早い段階で捨てられる。
@@ -172,10 +172,10 @@ erDiagram
 
 | カラム | 型 | 説明 |
 | --- | --- | --- |
-| `id` | TEXT (PK) | Fairy の内部で使う Person の ID |
+| `id` | TEXT (PK) | Fairy の内部で使う `Person` の ID |
 | `name` | TEXT NULL | Fairy が会話を通じて覚えた呼び名 |
 | `notes` | TEXT NULL | Fairy が覚えた情報。**[MVP]** 長期記憶を実装するまでの仮置き |
-| `role` | TEXT NULL | `Role`。`master` / `assistant2`。オーナーが設定する。`Role` のない Person は NULL（[`Role`](#role)） |
+| `role` | TEXT NULL | `Role`。`master` / `assistant2`。オーナーが設定する。`Role` のない `Person` は NULL（[`Role`](#role)） |
 | `created_at` | TEXT | 作成日時 |
 | `updated_at` | TEXT | 更新日時 |
 
@@ -183,12 +183,12 @@ erDiagram
 
 | カラム | 型 | 説明 |
 | --- | --- | --- |
-| `id` | TEXT (PK) | Fairy の内部で使う Account の ID |
+| `id` | TEXT (PK) | Fairy の内部で使う `Account` の ID |
 | `platform` | TEXT | `line` / `web` / `voice` など |
 | `platform_user_id` | TEXT | **プラットフォーム側でのユーザーの ID**。LINE なら `userId`（`U` で始まる文字列）。`id` は Fairy の内部で使う ID で、こちらはプラットフォームから届く ID なので別物。`(platform, platform_user_id)` で一意 |
 | `display_name` | TEXT NULL | プラットフォーム上の表示名（LINE のプロフィール名など） |
-| `person_id` | TEXT (FK) | 紐付く Person |
-| `linked_by` | TEXT | Person への紐付け方。`auto`（自動作成）/ `fairy_inference`（Fairy が会話から判断） |
+| `person_id` | TEXT (FK) | 紐付く `Person` |
+| `linked_by` | TEXT | `Person` への紐付け方。`auto`（自動作成）/ `fairy_inference`（Fairy が会話から判断） |
 | `created_at` | TEXT | 作成日時 |
 
 ### `conversations`（会話の場）
