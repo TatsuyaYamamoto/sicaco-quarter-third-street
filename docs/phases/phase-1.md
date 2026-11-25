@@ -65,7 +65,7 @@ flowchart LR
     LM -- Reply API --> LINE
 ```
 
-| 要素 | 役割 |
+| 要素 | 受け持つこと |
 | --- | --- |
 | Worker (`fairy`) | デプロイ単位。以下のモジュールを含む |
 | └ Platform Adapter (LINE) | LINE とのやり取り（[Platform Adapter (LINE) の処理フロー](#platform-adapter-line-の処理フロー)） |
@@ -91,7 +91,7 @@ flowchart LR
 
 Platform Adapter から受け取った `PlatformMessage` を、`ResolvedMessage` にして ConversationAgent に渡す（[全体設計](../design.md#3-つのレイヤーに分ける)）。
 
-1. **送信者の Account / Person を解決する**。D1 になければその場で作成する（[Account と Person の紐付け](../design.md#account-と-person-の紐付け)）。Person の役割（`persons.role`）も、ここで分かる。
+1. **送信者の Account / Person を解決する**。D1 になければその場で作成する（[Account と Person の紐付け](../design.md#account-と-person-の紐付け)）。Person の `Role`（`persons.role`）も、ここで分かる。
    - 表示名（`accounts.display_name`）は取得せず、空のままにする。**[MVP]** LINE の表示名が、Fairy にとっての正しい呼び名とは限らないため。呼び名は会話を通じて覚える（`persons.name`）。知らない人の LINE の表示名を Fairy が調べる手段は、後のフェーズで検討する（[後のフェーズで決めること](../plan.md#後のフェーズで決めること)）。
 2. **会話の場を解決する**。D1 になければその場で作成する。1 と 2 は並列に行う。
 3. **受信したメッセージを D1 に保存する**。スタンプは `packageId` / `stickerId` と、Webhook に含まれる場合は `keywords` を保存し、LLM にはキーワードをテキストとして渡す。
@@ -126,8 +126,8 @@ Platform Adapter から受け取った `PlatformMessage` を、`ResolvedMessage`
 
 - ID（`P1`、`P2`…）はプロンプトを作るたびに振る。Person の ID をそのまま使うより短く、トークンが少なくて済む。
 - 発言者を ID で表すのは、同じ人の発言を LLM が取り違えないようにするため。対応を別の欄にまとめておけば、人の情報が変わっても直すのはその欄だけで済む。
-- 人の欄には、分かっていることだけを書く。Phase 1 では Fairy は人の情報を覚えないので（[Fairy が覚える人の情報](../design.md#fairy-が覚える人の情報)）、書けるのは役割だけになる。**[MVP]**
-  - 役割（`persons.role`）が設定されている人: 「マスター」「助手二号」
+- 人の欄には、分かっていることだけを書く。Phase 1 では Fairy は人の情報を覚えないので（[Fairy が覚える人の情報](../design.md#fairy-が覚える人の情報)）、書けるのは `Role` だけになる。**[MVP]**
+  - `Role`（`persons.role`）が設定されている人: 「マスター」「助手二号」
   - それ以外の人: 「Fairy がまだ知らない人」
 - 返信は、LLM が呼び名を使って直接書く。返信の中では ID で人を表し、あとで呼び名に置き換える方式（二段構成）にはしない。
   - LLM は返信を書くときに、相手がマスターかどうかなどを知っている必要がある（`FAIRY.md` は相手によってふるまいを変える）。そのため、どちらの方式でも ID と呼び名の対応をプロンプトに入れることになり、置き換える段を足しても得るものがない。
