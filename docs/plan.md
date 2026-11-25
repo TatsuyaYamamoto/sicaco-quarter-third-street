@@ -25,13 +25,13 @@ status: draft
 
 - [ ] Phase 2 以降の内容と順番の確定
 - [ ] 長期記憶の方式（要約・ベクトル検索 (Vectorize) など）（Phase 3）
-- [ ] 自発的な話しかけで LINE Push API を使う場合の、無料通数の上限への対応（Phase 4、[LINE 受け口モジュールの処理フロー](phases/phase-1.md#line-受け口モジュールの処理フロー)）
+- [ ] 自発的な話しかけで LINE Push API を使う場合の、無料通数の上限への対応（Phase 4、[Platform Adapter (LINE) の処理フロー](phases/phase-1.md#platform-adapter-line-の処理フロー)）
 - [ ] iPad で音声をやり取りする方式（STT / TTS をどこで処理するか）（Phase 6）
 - [ ] スマートホーム機器の構成と、自宅 LAN 内の機器へのつなぎ方（Phase 8）
 - [ ] 環境をまたいで同一人物を判定し、Person を結合するしかた（誰の承認で結合するか、Fairy が覚えた情報のまとめ方）（Phase 5。[Account と Person の紐付け](design.md#account-と-person-の紐付け)）
 - [ ] LINE 以外のプラットフォームで「アカウント」を何で表すか（[概念モデル](design.md#概念モデル)）
 - [ ] 家族グループ以外のグループへの参加の可否と、その管理方法（[会話の受け付け判定](phases/phase-1.md#会話の受け付け判定)）
 - [ ] Fairy が人の情報（呼び名、どういう人か、Fairy の目線での人と人の関係）を会話から覚える仕組みと、D1 でのデータモデル（Phase 3。[Fairy が覚える人の情報](design.md#fairy-が覚える人の情報)）
-- [ ] 知らない人の LINE の表示名を Fairy が調べる手段（ツールなど）。受け口モジュールから Agent に渡す入力には表示名を含めない（[基本の流れ](phases/phase-1.md#基本の流れ)）
+- [ ] 知らない人の LINE の表示名を Fairy が調べる手段（ツールなど）。Platform Adapter から Agent に渡す入力には表示名を含めない（[基本の流れ](phases/phase-1.md#基本の流れ)）
 - [ ] OpenAI の使用量の監視方法（[LLM のモデルと会話履歴の件数](phases/phase-1.md#llm-のモデルと会話履歴の件数)）
 - [ ] Cloudflare AI Gateway を経由するか。経由したときの動作（構造化出力・reasoning effort の指定が届くか、中断が伝わるか、`gpt-6-luna` を使えるか）を、MVP ができてから実際に呼んで確かめる。使用量の監視に使える可能性もある（[LLM の呼び出し方法の比較](comparison/llm-invocation.md)）
