@@ -1,11 +1,11 @@
 import type { webhook } from "@line/bot-sdk";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { sign, testConfig, textEvent } from "../../test/line";
+import { sign, textEvent } from "../../test/line";
 import {
   createLineClient,
   isAcceptedConversation,
   isLineMessageEvent,
-  toIncomingMessage,
+  toPlatformMessage,
   verifySignature,
 } from "./line";
 
@@ -28,10 +28,10 @@ describe("verifySignature", () => {
 const toMessage = (event: unknown) => {
   // テストではイベントを部分的に書くので、型は検査しない
   const e = event as webhook.Event;
-  return isLineMessageEvent(e) ? toIncomingMessage(e) : null;
+  return isLineMessageEvent(e) ? toPlatformMessage(e) : null;
 };
 
-describe("isLineMessageEvent / toIncomingMessage", () => {
+describe("isLineMessageEvent / toPlatformMessage", () => {
   it("グループのテキストメッセージを変換する", () => {
     const message = toMessage(textEvent({ type: "group", groupId: "C1", userId: "U1" }));
     expect(message).toMatchObject({
@@ -88,7 +88,8 @@ describe("isAcceptedConversation", () => {
     ["助手二号との DM", "dm", "Uassistant2", true],
     ["それ以外の人との DM", "dm", "Uother", false],
   ] as const)("%s", (_, type, platformConversationId, expected) => {
-    expect(isAcceptedConversation({ type, platformConversationId }, testConfig)).toBe(expected);
+    const config = { LINE_ALLOWED_CONVERSATION_IDS: ["Cfamily", "Umaster", "Uassistant2"] };
+    expect(isAcceptedConversation({ type, platformConversationId }, config)).toBe(expected);
   });
 });
 

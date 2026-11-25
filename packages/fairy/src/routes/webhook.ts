@@ -10,7 +10,7 @@ import {
   createLineClient,
   isAcceptedConversation,
   isLineMessageEvent,
-  toIncomingMessage,
+  toPlatformMessage,
   verifySignature,
 } from "../helpers/line";
 
@@ -37,12 +37,12 @@ export const webhookRoutes = new Hono<{ Bindings: Env }>().post(
       if (!isLineMessageEvent(event)) {
         return;
       }
-      const message = toIncomingMessage(event);
+      const message = toPlatformMessage(event);
       if (!message || !isAcceptedConversation(message.conversation, config)) {
         return;
       }
       const reply = await dispatchMessage(c.env, message);
-      if (reply.type === "text") {
+      if (reply) {
         await client.reply(event.replyToken, reply.text);
       }
     };

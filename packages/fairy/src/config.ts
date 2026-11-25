@@ -12,9 +12,13 @@ const secretsSchema = z.object({
   LINE_CHANNEL_SECRET: nonEmpty,
   LINE_CHANNEL_ACCESS_TOKEN: nonEmpty,
   OPENAI_API_KEY: nonEmpty,
-  LINE_USER_ID_MASTER: nonEmpty,
-  LINE_USER_ID_ASSISTANT2: nonEmpty,
-  LINE_GROUP_ID_FAMILY: nonEmpty,
+  /** カンマ区切りの文字列を、ID の配列にする */
+  LINE_ALLOWED_CONVERSATION_IDS: nonEmpty.transform((value) =>
+    value
+      .split(",")
+      .map((id) => id.trim())
+      .filter((id) => id !== ""),
+  ),
 });
 
 /** wrangler.jsonc の vars に書く値 */

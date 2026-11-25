@@ -8,9 +8,7 @@ export const testConfig = {
   LINE_CHANNEL_SECRET: "test-channel-secret",
   LINE_CHANNEL_ACCESS_TOKEN: "test-access-token",
   OPENAI_API_KEY: "sk-test",
-  LINE_USER_ID_MASTER: "Umaster",
-  LINE_USER_ID_ASSISTANT2: "Uassistant2",
-  LINE_GROUP_ID_FAMILY: "Cfamily",
+  LINE_ALLOWED_CONVERSATION_IDS: "Cfamily, Umaster,Uassistant2",
 };
 
 /** wrangler.jsonc の vars に、テスト用の secrets を足した env */
