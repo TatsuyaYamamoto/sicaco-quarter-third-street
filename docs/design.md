@@ -47,9 +47,9 @@ Fairy は LINE などのアカウントではなく **「人間」** を識別�
 ### 概念モデル
 
 - **`Person`**: Fairy が識別する 1 人の人間。
-- **`Account`**: ある環境（プラットフォーム）での利用者のアカウント。LINE の 1 ユーザー、専用 UI のログインユーザーなどが該当する。1 人の `Person` が複数の `Account` を持つ。
-- **Platform（プラットフォーム）**: Fairy とやり取りする環境の種類。`line` / `web`（専用 UI）/ `voice`（iPad の音声）など。
-  - LINE 以外のプラットフォームで「アカウント」を何で表すか（専用 UI のログイン ID、音声なら端末や声紋など）は、そのプラットフォームを追加するフェーズで決める。**[未決]**
+- **`Account`**: ある `Platform` での利用者のアカウント。LINE の 1 ユーザー、専用 UI のログインユーザーなどが該当する。1 人の `Person` が複数の `Account` を持つ。
+- **`Platform`**: Fairy とやり取りする環境の種類。`line` / `web`（専用 UI）/ `voice`（iPad の音声）など。
+  - LINE 以外の `Platform` で「アカウント」を何で表すか（専用 UI のログイン ID、音声なら端末や声紋など）は、その `Platform` を追加するフェーズで決める。**[未決]**
 - **`Role`**: `Person` の属性。`master`（マスター）/ `assistant2`（助手二号）。ほとんどの `Person` は `Role` を持たない。
 
 テーブル定義は [データモデル](#データモデル) を参照。
@@ -59,7 +59,7 @@ Fairy は LINE などのアカウントではなく **「人間」** を識別�
 Fairy の処理（LLM）で `Account` と `Person` を紐付けると、返信に時間がかかる。そのため、Agent に渡す前に、`Account` から `Person` を引いておく（[全体アーキテクチャ](#全体アーキテクチャ) の MessageResolver）。
 
 - 知らない `Account` から最初のメッセージが届いたら、`Person` も一緒に作る。この `Person` は、あとで既存の `Person` と同じ人だと分かったら、既存の `Person` に結合することがある。
-- 同じ人だと分かったときの結合（2 つの `Person` を 1 人にまとめること）は、2 つ目のプラットフォームを追加する Phase 5 で決める。**[未決]** MVP は LINE だけなので、結合は起きない。
+- 同じ人だと分かったときの結合（2 つの `Person` を 1 人にまとめること）は、2 つ目の `Platform` を追加する Phase 5 で決める。**[未決]** MVP は LINE だけなので、結合は起きない。
   - 案: マスターか助手二号から「同じ人だ」という承認を得てから結合する。
   - 結合では、`Account` の付け替えだけでなく、暫定の `Person` について Fairy が覚えたこと（呼び名や関係）もまとめる必要がある。
 
@@ -68,8 +68,8 @@ Fairy の処理（LLM）で `Account` と `Person` を紐付けると、返信�
 `Role` は `Person` の属性として、D1 に持つ（`persons.role`）。発言者の `Role` は、`Account` から `Person` を引けば分かる。
 
 - `Role` は、オーナーが SQL で設定する。マスター・助手二号も、最初のメッセージで `Person` が作られる。`Role` を設定するまでは、Fairy にとって「まだ知らない人」として扱う。**[MVP]**
-- `Role` は D1 だけに持ち、設定値には持たない。`Role` は `Person` のものなので、`Account` の ID を設定値に書くと、プラットフォームごとに ID を書く必要があり、判定も `Account` を経由した回り道になるため。D1 だけに持つので、設定値と食い違う心配もない。
-- 別のプラットフォームの `Account` が同じ `Person` に結合されれば、その `Account` からの発言も同じ `Role` の人の発言になる。
+- `Role` は D1 だけに持ち、設定値には持たない。`Role` は `Person` のものなので、`Account` の ID を設定値に書くと、`Platform` ごとに ID を書く必要があり、判定も `Account` を経由した回り道になるため。D1 だけに持つので、設定値と食い違う心配もない。
+- 別の `Platform` の `Account` が同じ `Person` に結合されれば、その `Account` からの発言も同じ `Role` の人の発言になる。
 - 誰と会話するか（受け付ける DM の相手やグループ）は、`Role` とは別に、Platform Adapter の設定値で持つ（[全体アーキテクチャ](#全体アーキテクチャ)）。「Fairy と会話できるか」はアクセスの制御で、「Fairy にとって誰か」とは別の関心事なため。
 
 ### Fairy が覚える人の情報
@@ -90,19 +90,19 @@ Fairy を AI Agent として育てていくと、LINE・専用 UI・音声のど
 
 | レイヤー | 受け持つこと | 次のレイヤーへの出力 |
 | --- | --- | --- |
-| Platform Adapter | プラットフォーム固有の処理（LINE なら署名検証・受け付け判定・イベントの変換・Reply API での送信）。プラットフォームごとにある | `PlatformMessage`: プラットフォームに依存しない形にそろえたメッセージ。中身の ID はプラットフォームのもの |
+| Platform Adapter | `Platform` 固有の処理（LINE なら署名検証・受け付け判定・イベントの変換・Reply API での送信）。`Platform` ごとにある | `PlatformMessage`: `Platform` に依存しない形にそろえたメッセージ。中身の ID は `Platform` のもの |
 | MessageResolver | `Account` から `Person` を引き（なければ作る）、会話の場を解決し、受け取ったメッセージを保存する | `ResolvedMessage`: `Account`・`Person`（`Role` を含む）・会話の場を解決したメッセージ |
-| Agent | プラットフォームに依存しない会話処理（履歴・プロンプト・LLM・再生成の制御）。Durable Object `ConversationAgent` | `Reply`: 返信の内容。返信しないときは返さない |
+| Agent | `Platform` に依存しない会話処理（履歴・プロンプト・LLM・再生成の制御）。Durable Object `ConversationAgent` | `Reply`: 返信の内容。返信しないときは返さない |
 
 - 受け付け判定（誰と会話するか）は、Platform Adapter の責任にする。受け付ける会話は、Platform Adapter の設定値で持つ（[設定値](phases/phase-1.md#設定値)）。D1 を引かずに判定できるので速く、受け付けない入力を早い段階で捨てられる。
-- MessageResolver は、Agent への入り口の関数の中で、Worker で動かす（ConversationAgent を呼ぶ前）。Platform Adapter は、どのプラットフォームでも同じ入り口を呼ぶだけで済み、Agent は解決済みの入力を受け取るだけで済む。
+- MessageResolver は、Agent への入り口の関数の中で、Worker で動かす（ConversationAgent を呼ぶ前）。Platform Adapter は、どの `Platform` でも同じ入り口を呼ぶだけで済み、Agent は解決済みの入力を受け取るだけで済む。
 - メッセージを保存するレイヤーは、誰の発言かで分ける。
   - 人の発言（受け取ったメッセージ）は MessageResolver で保存する。再送の検知もここで行い、再送されたメッセージなら Agent を呼ばずに終える。
   - Fairy の発言は Agent で保存する。Fairy から話しかけるとき（Phase 4）は、受け取ったメッセージがないので MessageResolver を通らない。また、同じ会話の処理が集まる Agent で保存すれば、保存中の Fairy の発言が終わってから次の生成を始められ、履歴の順番を守れる。
 
 - デプロイ単位は **1 つの Worker（`fairy`）** にする。Worker を分けても、家庭用の規模では独立デプロイ・個別スケールなどの具体的なメリットがないため。分ける必要が出てきたら、そのときに切り出す（Durable Object は別 Worker からもバインディングで呼べる）。
-- プラットフォームが増えたら、Platform Adapter を足す（例: `/webhook/line`、`/ws` などのルート）。
-- Agent は返信の送り方を知らない。返信の送信（Reply API / Push API / WebSocket など）はプラットフォームごとの Platform Adapter が担う。
+- `Platform` が増えたら、Platform Adapter を足す（例: `/webhook/line`、`/ws` などのルート）。
+- Agent は返信の送り方を知らない。返信の送信（Reply API / Push API / WebSocket など）は `Platform` ごとの Platform Adapter が担う。
 
 ### Durable Object を使う理由
 
@@ -185,7 +185,7 @@ erDiagram
 | --- | --- | --- |
 | `id` | TEXT (PK) | Fairy の内部で使う `Account` の ID |
 | `platform` | TEXT | `line` / `web` / `voice` など |
-| `platform_user_id` | TEXT | **プラットフォーム側でのユーザーの ID**。LINE なら `userId`（`U` で始まる文字列）。`id` は Fairy の内部で使う ID で、こちらはプラットフォームから届く ID なので別物。`(platform, platform_user_id)` で一意 |
+| `platform_user_id` | TEXT | **`Platform` 側でのユーザーの ID**。LINE なら `userId`（`U` で始まる文字列）。`id` は Fairy の内部で使う ID で、こちらは `Platform` から届く ID なので別物。`(platform, platform_user_id)` で一意 |
 | `display_name` | TEXT NULL | プラットフォーム上の表示名（LINE のプロフィール名など） |
 | `person_id` | TEXT (FK) | 紐付く `Person` |
 | `linked_by` | TEXT | `Person` への紐付け方。`auto`（自動作成）/ `fairy_inference`（Fairy が会話から判断） |
@@ -197,7 +197,7 @@ erDiagram
 | --- | --- | --- |
 | `id` | TEXT (PK) | Fairy の内部で使う会話の ID |
 | `platform` | TEXT | `line` など |
-| `platform_conversation_id` | TEXT | プラットフォーム側の会話の ID。LINE のグループなら `groupId`、DM なら相手の `userId`。`(platform, platform_conversation_id)` で一意 |
+| `platform_conversation_id` | TEXT | `Platform` 側の会話の ID。LINE のグループなら `groupId`、DM なら相手の `userId`。`(platform, platform_conversation_id)` で一意 |
 | `type` | TEXT | `group` / `dm` |
 | `label` | TEXT NULL | `family` など、会話の場の用途 |
 | `created_at` | TEXT | 作成日時 |
@@ -212,7 +212,7 @@ erDiagram
 | `type` | TEXT | `text` / `sticker` など |
 | `text` | TEXT NULL | 本文。スタンプはキーワードを入れる |
 | `payload_json` | TEXT | 元のイベント（将来の再解析に使う） |
-| `platform_message_id` | TEXT NULL | プラットフォーム側のメッセージ ID（重複受信の検知に使う）。`(conversation_id, platform_message_id)` で一意 |
+| `platform_message_id` | TEXT NULL | `Platform` 側のメッセージ ID（重複受信の検知に使う）。`(conversation_id, platform_message_id)` で一意 |
 | `created_at` | TEXT | 送信日時 |
 
 [^agent-class]: [Agent class internals](https://developers.cloudflare.com/agents/concepts/agent-class/)
